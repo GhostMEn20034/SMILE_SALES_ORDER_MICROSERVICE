@@ -1,0 +1,44 @@
+version: "3.8"
+services:
+
+  # Django app, order microservice
+  web:
+    build: .
+    container_name: djangoorders
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  product_queue_listener_orders:
+    build: .
+    container_name: product_queue_listener_orders
+    command: python manage.py launch_product_queue_listener
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
+  # Postgres DB
+  db:
+    image: postgres:15.4-alpine
+    container_name: postgres_db_orders
+    volumes:
+      - postgres_data_orders:/var/lib/postgresql/data/
+      - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+    environment:
+      - POSTGRES_PASSWORD=${SUPER_USER_PWD}
+      - SQL_DATABASE=${SQL_DATABASE}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+
+volumes:
+  postgres_data_orders:
