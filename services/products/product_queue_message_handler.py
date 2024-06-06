@@ -6,7 +6,7 @@ from .replication.create import ProductCreator
 from .replication.update import ProductModifier
 from .replication.delete import ProductRemover
 
-def handle_message(routing_key: str, message: Any):
+def handle_product_queue_message(routing_key: str, message: Any):
     if routing_key == 'products.crud.create.one':
         return ProductCreator().create_one(message)
     elif routing_key == 'products.crud.create.many':

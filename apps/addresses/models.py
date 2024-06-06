@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django_countries.fields import CountryField
 from django_countries import Countries
 from django.db import models
@@ -16,6 +17,7 @@ class EuropeCountries(Countries):
 
 
 class Address(models.Model):
+    original_id = models.IntegerField(unique=True, validators=[MinValueValidator(1) ])
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
     country = CountryField(countries=EuropeCountries)
     first_name = models.CharField(max_length=50)

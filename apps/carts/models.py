@@ -1,5 +1,6 @@
 import uuid
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, F, ExpressionWrapper
 from django.db.models.functions import Coalesce
@@ -11,7 +12,8 @@ User = get_user_model()
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="cart", null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
+                                related_name="cart", null=True, blank=True, to_field='original_id')
     cart_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -51,6 +53,7 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
+    original_id = models.IntegerField(unique=True, validators=[MinValueValidator(1), ], default=1)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items", to_field='cart_uuid')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field='object_id')
     quantity = models.PositiveIntegerField(default=1)

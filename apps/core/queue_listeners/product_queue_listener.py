@@ -3,7 +3,7 @@ import threading
 import logging
 from django.conf import settings
 
-from services.products.message_handler import handle_message
+from services.products.product_queue_message_handler import handle_product_queue_message
 from ..message_broker.base.consumer import Consumer
 
 BINDING_KEY = 'products.#'
@@ -19,7 +19,7 @@ class ProductQueueListener(threading.Thread):
 
     def callback(self, ch, method, properties, body):
         print(f" [x] {method.routing_key}:{json.loads(body)}")
-        handle_message(method.routing_key, json.loads(body))
+        handle_product_queue_message(method.routing_key, json.loads(body))
 
     def run(self):
         logging.info('Product Queue Listener was launched')

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
@@ -15,6 +16,7 @@ class Account(AbstractUser):
     ]
 
     username = None
+    original_id = models.IntegerField(unique=True, validators=[MinValueValidator(1), ], null=True, blank=True)
     email = models.EmailField(_("email address"), unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50, blank=True)
