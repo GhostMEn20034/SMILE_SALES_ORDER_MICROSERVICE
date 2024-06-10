@@ -18,7 +18,7 @@ class EuropeCountries(Countries):
 
 class Address(models.Model):
     original_id = models.IntegerField(unique=True, validators=[MinValueValidator(1) ])
-    user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, to_field='original_id')
     country = CountryField(countries=EuropeCountries)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
