@@ -4,6 +4,7 @@ from apps.carts.models import Cart, CartItem
 
 
 class CartReplicationSerializer(serializers.ModelSerializer):
+    cart_uuid = serializers.UUIDField()
     class Meta:
         model = Cart
         fields = '__all__'

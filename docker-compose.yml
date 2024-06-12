@@ -27,6 +27,15 @@ services:
     env_file:
       - .env
 
+  user_data_queue_listener_orders:
+    build: .
+    container_name: user_data_queue_listener_orders
+    command: python manage.py launch_user_queue_listener
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
   # Postgres DB
   db:
     image: postgres:15.4-alpine

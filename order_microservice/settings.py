@@ -88,6 +88,7 @@ DATABASES = {
     }
 }
 
+SESSION_COOKIE_NAME = "orders-sessionid"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -106,6 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 
 
 # Internationalization
@@ -133,3 +135,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # AMPQ settings
 AMPQ_CONNECTION_URL = os.getenv("AMPQ_CONNECTION_URL")
 PRODUCT_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("PRODUCT_CRUD_EXCHANGE_TOPIC_NAME")
+USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME")

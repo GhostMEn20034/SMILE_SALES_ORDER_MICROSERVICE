@@ -16,9 +16,15 @@ class CartRemover:
     @staticmethod
     def remove_one_cart_item(data: dict) -> None:
         try:
-            cart_item = CartItem.objects.get(original_id=data.pop("original_id"))
+            cart_item = CartItem.objects.get(original_id=data.pop("cart_item_id"))
         except CartItem.DoesNotExist:
             logging.error("Cannot find product to update")
             return None
 
         cart_item.delete()
+
+    @staticmethod
+    def delete_inactive_carts(filters: dict) -> None:
+        updated_at_lte = filters["updated_at_lte"]
+        logging.info("Deleting inactive carts...")
+        Cart.objects.filter(updated_at__lte=updated_at_lte, user__isnull=True).delete()

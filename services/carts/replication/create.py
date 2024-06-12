@@ -12,6 +12,7 @@ class CartCreator:
     @staticmethod
     def create_cart(data: dict) -> dict:
         serializer = CartReplicationSerializer(data=data)
+
         if serializer.is_valid():
             serializer.save()
             return serializer.validated_data
@@ -31,10 +32,14 @@ class CartCreator:
 
     @staticmethod
     def create_many_cart_items(data: List[dict]) -> List[dict]:
-        serializer = CartItemReplicationSerializer(data=data, many=True)
-        if serializer.is_valid():
-            created_cart_items = CartItem.objects.bulk_create(serializer.data)
-            return CartItemReplicationSerializer(created_cart_items, many=True).data
-        else:
-            logging.error(serializer.errors)
-            logging.info("Unable to serialize data and create a Cart Items")
+        cart_items = []
+        for cart_item in data:
+            serializer = CartItemReplicationSerializer(data=cart_item)
+            if not serializer.is_valid():
+                logging.error(serializer.errors)
+                raise ValueError("Unable to deserialize data and create a Cart Item")
+            else:
+                cart_items.append(CartItem(**serializer.validated_data))
+
+        CartItem.objects.bulk_create(cart_items)
+        return data
