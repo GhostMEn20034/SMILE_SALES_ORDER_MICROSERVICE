@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'apps.addresses',
     'apps.products',
     'apps.carts',
+    'apps.orders',
 
     # Third-party apps
     'rest_framework',
@@ -108,7 +109,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
+    )
+}
 
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT', 'Bearer'),
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    "SIGNING_KEY": os.getenv("JWT_SIGNING_KEY", SECRET_KEY),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
