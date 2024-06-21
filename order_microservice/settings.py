@@ -4,7 +4,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -34,6 +33,7 @@ INSTALLED_APPS = [
     'apps.products',
     'apps.carts',
     'apps.orders',
+    'apps.payments',
 
     # Third-party apps
     'rest_framework',
@@ -73,7 +73,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'order_microservice.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -86,6 +85,13 @@ DATABASES = {
         "HOST": os.getenv("SQL_HOST", "localhost"),
         "PORT": os.getenv("SQL_PORT", "5432"),
         "CONN_MAX_AGE": int(os.getenv("SQL_CONN_MAX_AGE", 0)),
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/var/tmp/order_microservice_cache",
     }
 }
 
@@ -121,6 +127,12 @@ SIMPLE_JWT = {
     "SIGNING_KEY": os.getenv("JWT_SIGNING_KEY", SECRET_KEY),
 }
 
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL")
+
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_BASE_URL,
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -131,7 +143,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -147,3 +158,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AMPQ_CONNECTION_URL = os.getenv("AMPQ_CONNECTION_URL")
 PRODUCT_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("PRODUCT_CRUD_EXCHANGE_TOPIC_NAME")
 USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME")
+
+# Paypal Settings
+PAYPAL_API_BASE_URL = os.getenv("PAYPAL_API_BASE_URL")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
+PAYPAL_SECRET = os.getenv("PAYPAL_SECRET")
