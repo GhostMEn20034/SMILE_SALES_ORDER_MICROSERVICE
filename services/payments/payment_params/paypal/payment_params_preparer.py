@@ -5,7 +5,7 @@ from django.conf import settings
 
 from apps.products.models import Product
 from .purchase_unit_params import PurchaseItem, PurchaseUnit
-from .amount_params import AmountParam, UnitAmount, AmountBreakdown, AmountParamBase
+from .amount_params import AmountParam, UnitAmount, AmountBreakdown, ItemTotalBreakdown
 from param_classes.payments.build_purchase_unit_params import BuildPurchaseUnitParams
 
 class PayPalPaymentParamsPreparer:
@@ -43,7 +43,7 @@ class PayPalPaymentParamsPreparer:
         )
 
         amount_breakdown = AmountBreakdown(
-            item_total=AmountParamBase(
+            item_total=ItemTotalBreakdown(
                 value=str(round(total_amount, 2)),
                 currency_code=params.currency_code,
             )

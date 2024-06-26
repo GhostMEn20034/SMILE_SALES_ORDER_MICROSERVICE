@@ -11,6 +11,10 @@ class AmountParamBase:
         }
 
 
+class ItemTotalBreakdown(AmountParamBase):
+    pass
+
+
 class AmountBreakdown:
     """
     The subtotal for all items.
@@ -18,7 +22,7 @@ class AmountBreakdown:
     Must equal the sum of (items[].unit_amount * items[].quantity) for all items.
     item_total.value can not be a negative number.
     """
-    def __init__(self, item_total: AmountParamBase):
+    def __init__(self, item_total: ItemTotalBreakdown):
         self.item_total = item_total
 
     def to_dict(self):

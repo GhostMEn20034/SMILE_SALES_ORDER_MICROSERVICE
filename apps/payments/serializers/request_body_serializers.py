@@ -2,4 +2,4 @@ from rest_framework import serializers
 
 
 class CapturePaymentSerializer(serializers.Serializer):
-    pass
+    order_id = serializers.UUIDField()

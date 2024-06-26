@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -17,4 +17,10 @@ class OrderViewSet(viewsets.ViewSet):
 
     def create(self, request):
         payment_data = self.order_service.create_order()
-        return Response({'payment_data': payment_data})
+        return Response(
+            data={
+                'payment_id': payment_data.payment_id,
+                'checkout_link': payment_data.checkout_link,
+            },
+            status=status.HTTP_201_CREATED,
+        )
