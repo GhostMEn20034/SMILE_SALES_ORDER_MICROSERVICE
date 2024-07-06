@@ -37,6 +37,7 @@ class PayPalClient:
 
         response = requests.post(order_payment_url, headers=headers, json=payment_data)
 
+        print(response.json())
         if response.status_code == 200:
             return response.json()
 

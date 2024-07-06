@@ -1,6 +1,29 @@
 from typing import List
 
-from services.payments.payment_params.paypal.amount_params import AmountParam, UnitAmount
+from services.payments.payment_params.paypal.amount_params import UnitAmount, AmountBreakdown, TaxAmount
+from services.payments.payment_params.paypal.base.amount import AmountParamBase
+
+
+class AmountParam(AmountParamBase):
+    """
+    The total order amount.
+    PROPERTIES:
+        value: The value, which might be:
+            - An integer for currencies like JPY that are not typically fractional.
+            - A decimal fraction for currencies like TND that are subdivided into thousandths.
+        currency_code: The three-character ISO-4217 currency code that identifies the currency.
+    """
+
+    def __init__(self, value: str, currency_code: str, amount_breakdown: AmountBreakdown):
+        super().__init__(value, currency_code, )
+        self.breakdown = amount_breakdown
+
+    def to_dict(self):
+        return {
+            'value': self.value,
+            'currency_code': self.currency_code,
+            'breakdown': self.breakdown.to_dict(),
+        }
 
 
 class PurchaseItem:
@@ -14,13 +37,15 @@ class PurchaseItem:
         image_url: The URL of the item's image.
         unit_amount: The item price or rate per unit.
     """
-    def __init__(self, name: str, quantity: int, url: str, sku: str, image_url: str, unit_amount: UnitAmount):
+    def __init__(self, name: str, quantity: int, url: str, sku: str,
+                 image_url: str, unit_amount: UnitAmount, tax: TaxAmount):
         self.name = name
         self.quantity = quantity
         self.url = url
         self.sku = sku
         self.image_url = image_url
         self.unit_amount = unit_amount
+        self.tax = tax
 
     def to_dict(self):
         return {
@@ -29,7 +54,8 @@ class PurchaseItem:
             'url': self.url,
             'sku': self.sku,
             'image_url': self.image_url,
-            'unit_amount': self.unit_amount.to_dict()
+            'unit_amount': self.unit_amount.to_dict(),
+            'tax': self.tax.to_dict(),
         }
 
 
@@ -60,4 +86,3 @@ class PurchaseUnit:
             "amount": self.amount.to_dict(),
             "items": [item.to_dict() for item in self.items],
         }
-

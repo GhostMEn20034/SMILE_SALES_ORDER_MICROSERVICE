@@ -5,7 +5,7 @@ class PayPalPaymentRouter(SimpleRouter):
         Route(
             url='{prefix}/{lookup}/capture/',
             mapping={
-                'post': 'capture_paypal_payment',
+                'post': 'capture_payment',
             },
             name="{basename}-perform-capture",
             detail=True,

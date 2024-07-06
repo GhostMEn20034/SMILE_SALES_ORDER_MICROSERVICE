@@ -1,5 +1,8 @@
 import uuid
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import F
 
@@ -34,12 +37,26 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field='order_uuid')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field="object_id")
     price_per_unit = models.DecimalField(max_digits=13, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=3, decimal_places=2, validators=[
+        MinValueValidator(Decimal(0)),
+        MaxValueValidator(Decimal(1))
+    ], default=Decimal('0.00'))
+    # Tax amount per unit
+    tax_per_unit = models.GeneratedField(
+        expression=F('price_per_unit') * F('tax_rate'),
+        output_field=models.DecimalField(max_digits=13, decimal_places=2),
+        db_persist=True,
+    )
     quantity = models.PositiveIntegerField(default=1)
     amount = models.GeneratedField(
         expression=F('price_per_unit') * F('quantity'),
         output_field=models.DecimalField(max_digits=13, decimal_places=2),
         db_persist=True,
     )
+
+    @property
+    def amount_with_tax(self):
+        return round(self.amount + (self.tax_per_unit * self.quantity), 2)
 
     def __str__(self):
         return f'Order №{self.order_id}, {self.product.name} x {self.quantity}'

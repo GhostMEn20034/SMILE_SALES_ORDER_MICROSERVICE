@@ -58,5 +58,13 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field='object_id')
     quantity = models.PositiveIntegerField(default=1)
 
+    @property
+    def total_item_price(self):
+        return round(self.product.discounted_price * self.quantity, 2)
+
+    @property
+    def total_item_tax(self):
+        return round((self.product.discounted_price * self.product.tax_rate) * self.quantity, 2)
+
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"

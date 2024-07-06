@@ -1,14 +1,39 @@
+from django.db import transaction
 from django.db.models import QuerySet
 
-from apps.orders.models import Order
-from services.payments.payment_service import PaymentService
+from apps.orders.models import Order, OrderItem
+from param_classes.orders.create_order import CreateOrderParams
+from result_classes.orders.create_order import CreateOrderResult
 
 
 class OrderService:
-    def __init__(self, order_queryset: QuerySet[Order], payment_service: PaymentService):
+    def __init__(self, order_queryset: QuerySet[Order], order_items_queryset: QuerySet[OrderItem]):
         self.order_queryset = order_queryset
-        self.payment_service = payment_service
+        self.order_items_queryset = order_items_queryset
 
-    def create_order(self):
-        payment_data = self.payment_service.create_paypal_payment()
-        return payment_data
+    def create_order(self, params: CreateOrderParams) -> CreateOrderResult:
+        with transaction.atomic():
+            order: Order = self.order_queryset.create(user_id=params.user_id, address_id=params.address_id)
+            # Make Order Items Bulk Insert
+            order_items = []
+            for cart_item in params.cart_items:
+                order_item = OrderItem(
+                    product=cart_item.product,
+                    quantity=cart_item.quantity,
+                    price_per_unit=cart_item.product.discounted_price,
+                    order=order,
+                    tax_rate=cart_item.product.tax_rate,
+                )
+                order_items.append(order_item)
+
+            self.order_items_queryset.bulk_create(order_items)
+
+            # Fetch the order items again with their related products
+            # so generated data (AutoFields, GeneratedFields) was available
+            order_items = self.order_items_queryset.filter(order=order).select_related('product')
+
+            return CreateOrderResult(
+                order=order,
+                order_items=order_items,
+            )
+

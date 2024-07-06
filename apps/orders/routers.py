@@ -1,9 +1,10 @@
-from rest_framework.routers import SimpleRouter, Route
+from rest_framework.routers import SimpleRouter, Route, DynamicRoute
+
 
 class OrderRouter(SimpleRouter):
     routes = [
         Route(
-            url='{prefix}/',
+            url=r'{prefix}/$',
             mapping={
                 'post': 'create',
             },
@@ -11,5 +12,14 @@ class OrderRouter(SimpleRouter):
             detail=False,
             initkwargs={'suffix': 'List'}
 
+        ),
+        Route(
+            url='{prefix}/creation-essentials/$',
+            mapping={
+                'get': 'get_order_creation_essentials',
+            },
+            name="{basename}-creation-essentials",
+            detail=False,
+            initkwargs={'suffix': 'Creation Essentials',},
         ),
     ]

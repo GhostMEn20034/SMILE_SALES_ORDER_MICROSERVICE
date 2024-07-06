@@ -1,7 +1,9 @@
+from apps.orders.models import Order, OrderItem
 from services.orders.order_service import OrderService
-from .payments import get_payment_service
 
 
-def get_order_service(order_queryset) -> OrderService:
-    payment_service = get_payment_service()
-    return OrderService(order_queryset, payment_service)
+def get_order_service() -> OrderService:
+    order_queryset = Order.objects.all()
+    order_item_queryset = OrderItem.objects.all()
+
+    return OrderService(order_queryset, order_item_queryset)
