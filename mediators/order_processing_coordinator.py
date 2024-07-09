@@ -1,11 +1,17 @@
+from apps.orders.models import Order
+from apps.payments.exceptions import PaymentCaptureFailedException
+from apps.payments.models import Payment
 from mediators.service_list.order_processing_services import OrderProcessingServices
 from param_classes.carts.cart_item_filters import CartItemFilters
+from param_classes.order_processing_coordinator.order_cancelation import OrderCancellationParams
 from param_classes.order_processing_coordinator.order_creation import OrderCreationParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.payments.capture_payment_params import CapturePaymentParams
 from param_classes.payments.initialize_payment import InitializePaymentParams
+from param_classes.payments.payment_creation import PaymentCreationParams
 from result_classes.orders.create_order import CreateOrderResult
 from result_classes.orders.order_creation_essentials import OrderCreationEssentialsParams
+from apps.orders.exceptions import OrderDoesNotExist
 
 
 class OrderProcessingCoordinator:
@@ -44,11 +50,42 @@ class OrderProcessingCoordinator:
             addresses=addresses,
         )
 
-    def complete_funds_transferring(self, data: CapturePaymentParams):
+
+    def complete_funds_transferring(self, data: CapturePaymentParams) -> Payment:
         """
         Captures the payment and updates the order status to "processed"
         """
         # TODO: In the future, when there will be more than one payment provider,
         #  payment method resolver need to be written
         capture_success_data = self.services.payment_service.perform_paypal_payment_capture(data)
-        return capture_success_data
+
+        try:
+            modified_order = self.services.order_service.process_order(data.order_id)
+        except Order.DoesNotExist:
+            raise OrderDoesNotExist
+
+        capture = capture_success_data.captures[0]
+        payment_creation_params = PaymentCreationParams(
+            payment_id=capture_success_data.payment_id,
+            capture=capture,
+            user_id=data.user_id,
+            order_id=modified_order.order_uuid,
+            provider=data.provider,
+            status="success",
+        )
+        created_payment = self.services.payment_service.create_payment(payment_creation_params)
+        if created_payment is None:
+            raise PaymentCaptureFailedException
+
+        return created_payment
+
+    def cancel_order(self, params: OrderCancellationParams) -> Order:
+        """
+        Cancels the order and updates the order status to "canceled"
+        """
+        try:
+            order = self.services.order_service.cancel_order(params.order_uuid)
+        except Order.DoesNotExist:
+            raise OrderDoesNotExist
+
+        return order

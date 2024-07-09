@@ -1,22 +1,53 @@
-from django.conf import settings
+from typing import Optional
 
+from django.conf import settings
+from django.db.models import QuerySet
+
+from apps.payments.models import Payment
+from apps.payments.serializers.api_serializers import WritePaymentSerializer
 from param_classes.payments.build_purchase_unit_params import BuildPurchaseUnitParams
 from param_classes.payments.capture_payment_params import CapturePaymentParams
 from param_classes.payments.initialize_payment import InitializePaymentParams
+from param_classes.payments.payment_creation import PaymentCreationParams
+from utils.payments.paypal.response_parsers.payment_capture_response_parser import PayPalCaptureResponseParser
 from .payment_clients.paypal import PayPalClient
 from .payment_params.paypal.create_paypal_payment_params import CreatePaypalPaymentParams
 from .payment_params.paypal.payment_source import PayPalPaymentSource
 from .payment_params.paypal.experience_context import PayPalExperienceContext
 from .payment_params.paypal.payment_params_preparer import PayPalPaymentParamsPreparer
+from .payment_responses.paypal.capture_payment_response import CapturePayPalPaymentResponse
 from .payment_responses.paypal.create_payment_response import CreatePaypalPaymentResponse
 
 
 class PaymentService:
-    def __init__(self):
+    def __init__(self, payment_queryset: QuerySet[Payment]):
         self.paypal_client = PayPalClient(
             settings.PAYPAL_CLIENT_ID,
             settings.PAYPAL_SECRET,
         )
+        self.payment_queryset = payment_queryset
+
+    def create_payment(self, params: PaymentCreationParams) -> Optional[Payment]:
+        """
+        Creates a payment object, inserts it into the db and returns it
+        """
+        serializer = WritePaymentSerializer(data={
+            "user": params.user_id,
+            "order": params.order_id,
+            "net_amount": params.capture.net_amount.value,
+            "provider_fee": params.capture.provider_fee.value,
+            "currency": params.capture.net_amount.currency_code,
+            "status": params.status,
+            "provider": params.provider,
+            "provider_payment_id": params.payment_id,
+            "capture_id": params.capture.capture_id,
+        })
+        if not serializer.is_valid():
+            print(serializer.errors)
+            return None
+
+        payment: Payment = self.payment_queryset.create(**serializer.validated_data)
+        return payment
 
     def initialize_paypal_payment(self, params: InitializePaymentParams) -> CreatePaypalPaymentResponse:
         """
@@ -39,7 +70,9 @@ class PaymentService:
                        f"?orderId={purchase_unit.reference_id}"
                        f"&orderDate={str(params.created_order.order.created_at.date())}"
                        f"&paymentMethod=paypal",
-            cancel_url=f"{settings.FRONTEND_BASE_URL}/payments/cancelled",
+            cancel_url=f"{settings.FRONTEND_BASE_URL}/payments/canceled"
+                       f"?orderId={purchase_unit.reference_id}"
+                       f"&paymentMethod=paypal",
         )
         payment_source = PayPalPaymentSource(experience_context)
 
@@ -62,10 +95,12 @@ class PaymentService:
 
         return create_order_response
 
-    def perform_paypal_payment_capture(self, data: CapturePaymentParams):
+    def perform_paypal_payment_capture(self, data: CapturePaymentParams) -> CapturePayPalPaymentResponse:
         """
         Captures PayPal Payment
         """
-        print(data.order_id)
         capture_data = self.paypal_client.capture_payment(data.payment_id)
-        return {"id": capture_data["id"]}
+        capture_response_parser = PayPalCaptureResponseParser(capture_data)
+        capture_response = capture_response_parser.parse()
+
+        return capture_response

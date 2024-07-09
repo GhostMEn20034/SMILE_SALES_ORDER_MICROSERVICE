@@ -27,6 +27,16 @@ class PayPalPaymentViewSet(viewsets.ViewSet):
         capture_payment_params = CapturePaymentParams(
             order_id=validated_data["order_id"],
             payment_id=payment_id,
+            user_id=request.user.id,
+            provider='paypal',
         )
         capture_success_data = self.order_processing_coordinator.complete_funds_transferring(capture_payment_params)
-        return Response(status=status.HTTP_200_OK, data=capture_success_data)
+        return Response(
+            status=status.HTTP_200_OK,
+            data={
+                "payment_id": capture_success_data.provider_payment_id,
+                "order_id": capture_success_data.order_id,
+                "payment_status": capture_success_data.status,
+                "payment_type": capture_success_data.type,
+            }
+        )

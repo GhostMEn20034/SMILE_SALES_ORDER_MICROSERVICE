@@ -37,6 +37,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field='order_uuid')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field="object_id")
     price_per_unit = models.DecimalField(max_digits=13, decimal_places=2)
+    currency = models.CharField(max_length=3, default='USD')
     tax_rate = models.DecimalField(max_digits=3, decimal_places=2, validators=[
         MinValueValidator(Decimal(0)),
         MaxValueValidator(Decimal(1))

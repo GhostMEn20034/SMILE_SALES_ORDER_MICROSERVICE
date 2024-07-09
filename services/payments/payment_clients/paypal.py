@@ -3,7 +3,7 @@ from django.conf import settings
 
 from apps.payments.exceptions import PaymentCreationFailedException, PaymentCaptureFailedException
 from services.payments.payment_params.paypal.create_paypal_payment_params import CreatePaypalPaymentParams
-from utils.payments.token_managers.paypal_token_manager import PaypalTokenManager
+from utils.payments.paypal.token_managers.paypal_token_manager import PaypalTokenManager
 
 
 class PayPalClient:
@@ -37,7 +37,6 @@ class PayPalClient:
 
         response = requests.post(order_payment_url, headers=headers, json=payment_data)
 
-        print(response.json())
         if response.status_code == 200:
             return response.json()
 
@@ -60,5 +59,5 @@ class PayPalClient:
         response = requests.post(capture_payment_url, headers=headers)
         if response.status_code == 201:
             return response.json()
-        else:
-            raise PaymentCaptureFailedException
+
+        raise PaymentCaptureFailedException

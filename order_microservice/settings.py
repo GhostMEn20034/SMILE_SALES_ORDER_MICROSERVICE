@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'apps.carts',
     'apps.orders',
     'apps.payments',
+    'apps.webhooks',
 
     # Third-party apps
     'rest_framework',

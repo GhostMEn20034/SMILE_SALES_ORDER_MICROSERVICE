@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import transaction
 from django.db.models import QuerySet
 
@@ -37,3 +39,20 @@ class OrderService:
                 order_items=order_items,
             )
 
+    def cancel_order(self, order_uuid: uuid.UUID) -> Order:
+        """
+        Sets Order's status to "canceled" and return modified order object
+        """
+        order: Order = self.order_queryset.get(order_uuid=order_uuid)
+        order.status = "cancelled"
+        order.save()
+        return order
+
+    def process_order(self, order_uuid: uuid.UUID) -> Order:
+        """
+        Sets Order's status to "processed" and return modified order object
+        """
+        order: Order = self.order_queryset.get(order_uuid=order_uuid)
+        order.status = "processed"
+        order.save()
+        return order

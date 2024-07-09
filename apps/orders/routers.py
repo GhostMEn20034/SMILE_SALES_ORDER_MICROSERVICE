@@ -14,12 +14,21 @@ class OrderRouter(SimpleRouter):
 
         ),
         Route(
-            url='{prefix}/creation-essentials/$',
+            url=r'{prefix}/creation-essentials/$',
             mapping={
                 'get': 'get_order_creation_essentials',
             },
             name="{basename}-creation-essentials",
             detail=False,
             initkwargs={'suffix': 'Creation Essentials',},
+        ),
+        Route(
+            url=r'{prefix}/{lookup}/cancel/$',
+            mapping={
+                'post': 'cancel_order',
+            },
+            name="{basename}-cancel-order",
+            detail=False,
+            initkwargs={'suffix': 'Cancel Order'}
         ),
     ]
