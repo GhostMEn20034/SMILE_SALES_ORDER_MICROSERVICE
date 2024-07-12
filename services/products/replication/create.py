@@ -1,5 +1,5 @@
 import logging
-from apps.products.serializers.create import ProductSerializer
+from apps.products.serializers.replication.create import ProductSerializer
 from apps.products.models import Product
 
 

@@ -3,7 +3,7 @@ from logging import error
 
 from apps.products.param_classes.attach_to_event_params import AttachToEventParams
 from apps.products.param_classes.detach_from_event_params import DetachFromEventParams
-from apps.products.serializers.update import ProductSerializer
+from apps.products.serializers.replication.update import ProductSerializer
 from apps.products.models import Product
 from django.db import transaction
 

@@ -7,11 +7,21 @@ class OrderRouter(SimpleRouter):
             url=r'{prefix}/$',
             mapping={
                 'post': 'create',
+                'get': 'list',
             },
             name="{basename}-list",
             detail=False,
             initkwargs={'suffix': 'List'}
 
+        ),
+        Route(
+            url=r'{prefix}/filters/$',
+            mapping={
+                'get': 'get_order_list_filters',
+            },
+            name="{basename}-list-filters",
+            detail=False,
+            initkwargs={'suffix': 'List Filters'},
         ),
         Route(
             url=r'{prefix}/creation-essentials/$',
@@ -31,4 +41,5 @@ class OrderRouter(SimpleRouter):
             detail=False,
             initkwargs={'suffix': 'Cancel Order'}
         ),
+
     ]

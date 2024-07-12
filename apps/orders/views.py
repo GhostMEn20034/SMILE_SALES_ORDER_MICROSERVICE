@@ -1,13 +1,17 @@
 import uuid
 
+from django.db.models import QuerySet
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
-from apps.orders.serializers.request_body_serializers import OrderCreationRequestBody
+from apps.orders.serializers.request_body_serializers import OrderCreationRequestBody, OrderListFiltersRequestBody
 from apps.orders.serializers.api_serializers import OrderSerializer
+from apps.core.pagination import CustomPagination
+from .serializers.api_detailed_serializers import DetailedOrderSerializer
 from dependencies.service_dependencies.orders import get_order_service
 from dependencies.mediator_dependencies.order_processing import get_order_processing_coordinator
 from mediators.order_processing_coordinator import OrderProcessingCoordinator
+from param_classes.orders.order_list import OrderListParams
 from services.orders.order_service import OrderService
 from param_classes.order_processing_coordinator.order_creation import OrderCreationParams
 from param_classes.order_processing_coordinator.order_cancelation import OrderCancellationParams
@@ -15,6 +19,9 @@ from param_classes.order_processing_coordinator.order_cancelation import OrderCa
 
 class OrderViewSet(viewsets.ViewSet):
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = CustomPagination
+
+
     lookup_field = 'order_uuid'
 
     def __init__(self, *args, **kwargs):
@@ -41,6 +48,31 @@ class OrderViewSet(viewsets.ViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    def list(self, request, *args, **kwargs) -> Response:
+        order_status = request.query_params.get('order_status')
+        time_filter = request.query_params.get('time_filter')
+
+        serializer = OrderListFiltersRequestBody(data={
+            "order_status": order_status, "time_filter": time_filter
+        })
+        serializer.is_valid(raise_exception=True)
+
+        order_list_params = OrderListParams(
+            user_id=request.user.id,
+            order_status=order_status,
+            time_filter=time_filter,
+        )
+        order_list = self.order_service.get_orders(order_list_params)
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(order_list, request)
+        if page is not None:
+            serializer = DetailedOrderSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = DetailedOrderSerializer(order_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def get_order_creation_essentials(self, request, *args, **kwargs) -> Response:
         order_creation_essentials = self.order_processing_coordinator.get_order_creation_essentials(
             user_id=request.user.id,
@@ -60,3 +92,13 @@ class OrderViewSet(viewsets.ViewSet):
         serializer = OrderSerializer(instance=modified_order)
 
         return Response(data={"order": serializer.data}, status=status.HTTP_200_OK)
+
+    def get_order_list_filters(self, request, *args, **kwargs) -> Response:
+        order_status = request.query_params.get('order_status')
+        filters = self.order_service.get_order_list_filters(order_status)
+        return Response(
+            data={
+                "filters": filters,
+            },
+            status=status.HTTP_200_OK,
+        )

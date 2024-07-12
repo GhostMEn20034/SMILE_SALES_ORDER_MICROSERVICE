@@ -25,16 +25,20 @@ class Order(models.Model):
     order_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='original_id')
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, to_field='original_id', null=True)
-    status = models.CharField(max_length=10, choices=order_status_choices, default='pending')
+    status = models.CharField(max_length=10, choices=order_status_choices, default='pending', db_index=True)
+    archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+    shipped_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'Order № {self.order_uuid} created by {self.user.email}'
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field='order_uuid')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field='order_uuid', related_name='order_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field="object_id")
     price_per_unit = models.DecimalField(max_digits=13, decimal_places=2)
     currency = models.CharField(max_length=3, default='USD')
