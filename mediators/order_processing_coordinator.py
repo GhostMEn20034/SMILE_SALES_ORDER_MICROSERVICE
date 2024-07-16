@@ -1,3 +1,5 @@
+import uuid
+
 from apps.orders.models import Order
 from apps.payments.exceptions import PaymentCaptureFailedException
 from apps.payments.models import Payment
@@ -9,6 +11,7 @@ from param_classes.orders.create_order import CreateOrderParams
 from param_classes.payments.capture_payment_params import CapturePaymentParams
 from param_classes.payments.initialize_payment import InitializePaymentParams
 from param_classes.payments.payment_creation import PaymentCreationParams
+from result_classes.order_processing_coordinator.order_details import OrderDetailsResult
 from result_classes.orders.create_order import CreateOrderResult
 from result_classes.orders.order_creation_essentials import OrderCreationEssentialsParams
 from apps.orders.exceptions import OrderDoesNotExist

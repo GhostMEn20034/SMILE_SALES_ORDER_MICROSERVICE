@@ -13,7 +13,7 @@ User = get_user_model()
 
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="original_id")
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field="order_uuid")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field="order_uuid", related_name="payments")
     net_amount = models.DecimalField(max_digits=15, decimal_places=2)
     provider_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     gross_amount = models.GeneratedField(

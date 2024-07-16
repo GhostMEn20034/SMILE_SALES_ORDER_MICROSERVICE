@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from django.db import transaction
 from django.db.models import QuerySet, Prefetch, Sum, F
 
+from apps.orders.exceptions import OrderDoesNotExist
 from apps.orders.models import Order, OrderItem
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.orders.order_list import OrderListParams
@@ -74,7 +75,7 @@ class OrderService:
 
         orders = self.order_queryset.filter(user_id=params.user_id, **order_status_filter, **time_filters) \
             .select_related('address').prefetch_related(
-                Prefetch('order_items', queryset=self.order_items_queryset.select_related('product'))
+            Prefetch('order_items', queryset=self.order_items_queryset.select_related('product'))
         ).annotate(
             # Total amount's formula - SUM(amount + (tax_per_unit * quantity)),
             total_amount=Sum(F('order_items__amount') + (F('order_items__tax_per_unit') * F('order_items__quantity')))
@@ -90,4 +91,15 @@ class OrderService:
         filter_generator = OrderListFiltersGenerator(order_status)
         return filter_generator.get_filters()
 
+    def get_order_details(self, user_id: int, order_uuid: uuid.UUID) -> Order:
+        try:
+            order: Order = self.order_queryset.select_related('address').prefetch_related(
+                Prefetch('order_items', queryset=self.order_items_queryset.select_related('product'))
+            ).prefetch_related('payments').annotate(
+                total_amount_before_tax=Sum(F('order_items__amount')),
+                total_tax = Sum(F('order_items__tax_per_unit') * F('order_items__quantity')),
+            ).get(user_id=user_id, order_uuid=order_uuid)
+        except Order.DoesNotExist:
+            raise OrderDoesNotExist
 
+        return order

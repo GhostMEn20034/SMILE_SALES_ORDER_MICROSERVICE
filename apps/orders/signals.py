@@ -14,3 +14,5 @@ def update_order_dates(sender, instance,  **kwargs):
                 instance.cancelled_at = timezone.now()
             if instance.status == 'delivered' and not instance.delivered_at:
                 instance.delivered_at = timezone.now()
+            if instance.status == 'returned' and not instance.returned_at:
+                instance.returned_at = timezone.now()

@@ -19,7 +19,8 @@ class Order(models.Model):
         ('processed', 'Processed'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('returned', 'Returned'),
     ]
 
     order_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -32,6 +33,7 @@ class Order(models.Model):
     shipped_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
+    returned_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'Order № {self.order_uuid} created by {self.user.email}'

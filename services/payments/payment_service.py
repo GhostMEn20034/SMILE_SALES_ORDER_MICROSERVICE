@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models import QuerySet
 
 from apps.payments.models import Payment
-from apps.payments.serializers.api_serializers import WritePaymentSerializer
+from apps.payments.serializers.api_serializers import PaymentSerializer
 from param_classes.payments.build_purchase_unit_params import BuildPurchaseUnitParams
 from param_classes.payments.capture_payment_params import CapturePaymentParams
 from param_classes.payments.initialize_payment import InitializePaymentParams
@@ -31,7 +31,7 @@ class PaymentService:
         """
         Creates a payment object, inserts it into the db and returns it
         """
-        serializer = WritePaymentSerializer(data={
+        serializer = PaymentSerializer(data={
             "user": params.user_id,
             "order": params.order_id,
             "net_amount": params.capture.net_amount.value,
@@ -43,7 +43,6 @@ class PaymentService:
             "capture_id": params.capture.capture_id,
         })
         if not serializer.is_valid():
-            print(serializer.errors)
             return None
 
         payment: Payment = self.payment_queryset.create(**serializer.validated_data)

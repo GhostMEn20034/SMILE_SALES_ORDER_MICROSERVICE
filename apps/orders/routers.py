@@ -41,5 +41,13 @@ class OrderRouter(SimpleRouter):
             detail=False,
             initkwargs={'suffix': 'Cancel Order'}
         ),
-
+        Route(
+            url=r'{prefix}/{lookup}/$',
+            mapping={
+                'get': 'get_order_by_uuid',
+            },
+            name='{basename}-details',
+            detail=True,
+            initkwargs={'suffix': 'Details'}
+        ),
     ]

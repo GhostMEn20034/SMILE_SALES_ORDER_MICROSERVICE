@@ -1,13 +1,12 @@
 import uuid
 
-from django.db.models import QuerySet
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
 from apps.orders.serializers.request_body_serializers import OrderCreationRequestBody, OrderListFiltersRequestBody
 from apps.orders.serializers.api_serializers import OrderSerializer
 from apps.core.pagination import CustomPagination
-from .serializers.api_detailed_serializers import DetailedOrderSerializer
+from .serializers.api_detailed_serializers import OrderListSerializer, OrderDetailsSerializer
 from dependencies.service_dependencies.orders import get_order_service
 from dependencies.mediator_dependencies.order_processing import get_order_processing_coordinator
 from mediators.order_processing_coordinator import OrderProcessingCoordinator
@@ -67,10 +66,10 @@ class OrderViewSet(viewsets.ViewSet):
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(order_list, request)
         if page is not None:
-            serializer = DetailedOrderSerializer(page, many=True)
+            serializer = OrderListSerializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
 
-        serializer = DetailedOrderSerializer(order_list, many=True)
+        serializer = OrderListSerializer(order_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_order_creation_essentials(self, request, *args, **kwargs) -> Response:
@@ -102,3 +101,8 @@ class OrderViewSet(viewsets.ViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    def get_order_by_uuid(self, request, order_uuid: uuid.UUID, *args, **kwargs) -> Response:
+        order = self.order_service.get_order_details(request.user.id, order_uuid)
+        serializer = OrderDetailsSerializer(instance=order)
+        return Response(data={"order": serializer.data}, status=status.HTTP_200_OK)
