@@ -3,9 +3,11 @@ import uuid
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
-from apps.orders.serializers.request_body_serializers import OrderCreationRequestBody, OrderListFiltersRequestBody
+from apps.orders.serializers.request_body_serializers import OrderCreationRequestBody, OrderListFiltersRequestBody, \
+    ChangeArchivedStatusRequestBody
 from apps.orders.serializers.api_serializers import OrderSerializer
 from apps.core.pagination import CustomPagination
+from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
 from .serializers.api_detailed_serializers import OrderListSerializer, OrderDetailsSerializer
 from dependencies.service_dependencies.orders import get_order_service
 from dependencies.mediator_dependencies.order_processing import get_order_processing_coordinator
@@ -106,3 +108,23 @@ class OrderViewSet(viewsets.ViewSet):
         order = self.order_service.get_order_details(request.user.id, order_uuid)
         serializer = OrderDetailsSerializer(instance=order)
         return Response(data={"order": serializer.data}, status=status.HTTP_200_OK)
+
+    def change_order_archive_flag(self, request, order_uuid: uuid.UUID, *args, **kwargs) -> Response:
+        """
+        Order archival method
+        """
+        purpose = request.data.get('purpose', 'archive')
+
+        serializer = ChangeArchivedStatusRequestBody(data={"purpose": purpose})
+        serializer.is_valid(raise_exception=True)
+
+        change_archived_status_params = ChangeArchivedStatusParams(
+            user_id=request.user.id,
+            order_uuid=order_uuid,
+            purpose=serializer.validated_data.get('purpose'),
+        )
+
+        order = self.order_service.change_archived_flag(change_archived_status_params)
+        return Response(
+            data={'archived': order.archived, }
+        )

@@ -33,6 +33,14 @@ class OrderListFiltersResolver:
 
         return year_to_filter_mapping
 
+    @staticmethod
+    def _get_other_filters_mapping() -> Dict[str, Any]:
+        filters = {
+            "archived": {"archived": True}
+        }
+
+        return filters
+
     def _get_default_time_filter(self) -> Optional[str]:
 
         if self.order_status == 'allOrders':
@@ -82,6 +90,7 @@ class OrderListFiltersResolver:
     def resolve_time_filter(self) -> Dict[str, Any]:
         time_filters = deepcopy(self._get_custom_timeframe_to_filter_mapping())
         time_filters.update(self._get_year_to_filter_mapping())
+        time_filters.update(self._get_other_filters_mapping())
 
         time_filter = self.time_filter if self.time_filter else self._get_default_time_filter()
         return time_filters.get(time_filter, {})

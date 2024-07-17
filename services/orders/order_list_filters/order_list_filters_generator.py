@@ -40,6 +40,10 @@ class OrderListFiltersGenerator:
             filters = self._get_time_filters_for_all_orders()
         elif self.order_status == "canceledOrders":
             filters = self._get_time_filters_for_canceled_orders()
+                   
+        if filters is not None:
+            filters["archived"] = "Archived Orders"
+
 
         return filters
 

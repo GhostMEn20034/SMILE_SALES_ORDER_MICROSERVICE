@@ -4,8 +4,9 @@ from typing import Dict, Optional
 from django.db import transaction
 from django.db.models import QuerySet, Prefetch, Sum, F
 
-from apps.orders.exceptions import OrderDoesNotExist
+from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders
 from apps.orders.models import Order, OrderItem
+from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.orders.order_list import OrderListParams
 from result_classes.orders.create_order import CreateOrderResult
@@ -72,6 +73,7 @@ class OrderService:
         )
         order_status_filter = filter_resolver.resolve_order_status()
         time_filters = filter_resolver.resolve_time_filter()
+        time_filters['archived'] = time_filters.get('archived', False)
 
         orders = self.order_queryset.filter(user_id=params.user_id, **order_status_filter, **time_filters) \
             .select_related('address').prefetch_related(
@@ -101,5 +103,26 @@ class OrderService:
             ).get(user_id=user_id, order_uuid=order_uuid)
         except Order.DoesNotExist:
             raise OrderDoesNotExist
+
+        return order
+
+    def change_archived_flag(self, params: ChangeArchivedStatusParams) -> Order:
+        """
+        Sets Order's "archived" field to opposite value and returns modified order object
+        """
+        if params.purpose == 'archive':
+            archived_orders = Order.objects.filter(user_id=params.user_id, archived=True).count()
+            if archived_orders >= 250:
+                raise TooMuchArchivedOrders
+
+        try:
+            order: Order = self.order_queryset.get(user_id=params.user_id, order_uuid=params.order_uuid)
+        except Order.DoesNotExist:
+            raise OrderDoesNotExist
+
+        archived_flag = True if params.purpose == 'archive' else False
+
+        order.archived = archived_flag
+        order.save()
 
         return order

@@ -42,6 +42,15 @@ class OrderRouter(SimpleRouter):
             initkwargs={'suffix': 'Cancel Order'}
         ),
         Route(
+            url=r'{prefix}/{lookup}/archive/$',
+            mapping={
+                'put': 'change_order_archive_flag',
+            },
+            name="{basename}-archive-order",
+            detail=False,
+            initkwargs={'suffix': 'Archive Order'}
+        ),
+        Route(
             url=r'{prefix}/{lookup}/$',
             mapping={
                 'get': 'get_order_by_uuid',
