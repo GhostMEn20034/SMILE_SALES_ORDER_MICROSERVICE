@@ -7,5 +7,6 @@ urlpatterns = [
         path('', include('apps.orders.urls')),
         path('', include('apps.payments.urls')),
         path('', include('apps.webhooks.urls')),
+        path('', include('apps.recommendations.urls')),
     ])),
 ]

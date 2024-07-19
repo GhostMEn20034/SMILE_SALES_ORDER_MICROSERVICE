@@ -21,7 +21,7 @@ class Product(models.Model):
         MinValueValidator(Decimal(0)),
         MaxValueValidator(Decimal(1)),
     ], db_index=True)
-    stock = models.PositiveIntegerField(default=0, )
+    stock = models.PositiveIntegerField(default=0, db_index=True)
     # Maximum count of product available on one order
     max_order_qty = models.PositiveIntegerField(default=0, )
     sku = models.CharField()

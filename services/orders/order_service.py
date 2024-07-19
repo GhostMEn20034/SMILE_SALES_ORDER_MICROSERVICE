@@ -6,6 +6,7 @@ from django.db.models import QuerySet, Prefetch, Sum, F
 
 from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders
 from apps.orders.models import Order, OrderItem
+from apps.products.models import Product
 from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.orders.order_list import OrderListParams

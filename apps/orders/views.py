@@ -67,12 +67,10 @@ class OrderViewSet(viewsets.ViewSet):
 
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(order_list, request)
-        if page is not None:
-            serializer = OrderListSerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
 
-        serializer = OrderListSerializer(order_list, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = OrderListSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
 
     def get_order_creation_essentials(self, request, *args, **kwargs) -> Response:
         order_creation_essentials = self.order_processing_coordinator.get_order_creation_essentials(
