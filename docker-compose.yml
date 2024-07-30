@@ -36,6 +36,15 @@ services:
     env_file:
       - .env
 
+  dramatiq_worker_orders:
+    build: .
+    container_name: dramatiq_worker_orders
+    command: python manage.py rundramatiq
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+
   # Postgres DB
   db:
     image: postgres:15.4-alpine

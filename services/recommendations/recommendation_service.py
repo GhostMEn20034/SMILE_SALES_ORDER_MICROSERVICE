@@ -23,6 +23,4 @@ class RecommendationService:
             orderitem__order__status__in=excluded_statuses,
         ).order_by('-price')
 
-
-
         return products

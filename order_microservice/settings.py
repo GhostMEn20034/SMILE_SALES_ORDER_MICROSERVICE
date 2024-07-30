@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import redis
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +42,8 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_dramatiq',
+    'dramatiq_crontab',
     'phonenumber_field',
     'django_countries',
     'corsheaders',
@@ -90,6 +94,33 @@ DATABASES = {
         "CONN_MAX_AGE": int(os.getenv("SQL_CONN_MAX_AGE", 0)),
     }
 }
+
+# Dramatiq Tasks
+DRAMATIQ_BROKER_URL = os.getenv("DRAMATIQ_BROKER_URL", "redis://127.0.0.1:6379/0")
+DRAMATIQ_BROKER = {
+    "BROKER": "dramatiq.brokers.redis.RedisBroker",
+    "OPTIONS": {
+        "connection_pool": redis.ConnectionPool.from_url(DRAMATIQ_BROKER_URL)
+    },
+    "MIDDLEWARE": [
+        "dramatiq.middleware.AgeLimit",
+        "dramatiq.middleware.TimeLimit",
+        "dramatiq.middleware.Retries",
+        "django_dramatiq.middleware.AdminMiddleware",
+        "django_dramatiq.middleware.DbConnectionsMiddleware",
+    ]
+}
+
+DRAMATIQ_RESULT_BACKEND = {
+    "BACKEND": "dramatiq.results.backends.redis.RedisBackend",
+    "BACKEND_OPTIONS": {
+        "url": DRAMATIQ_BROKER_URL,
+    },
+    "MIDDLEWARE_OPTIONS": {
+        "result_ttl": 1000 * 60 * 10
+    }
+}
+
 
 CACHES = {
     "default": {
@@ -161,6 +192,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AMPQ_CONNECTION_URL = os.getenv("AMPQ_CONNECTION_URL")
 PRODUCT_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("PRODUCT_CRUD_EXCHANGE_TOPIC_NAME")
 USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME = os.getenv("USERS_DATA_CRUD_EXCHANGE_TOPIC_NAME")
+ORDER_PROCESSING_EXCHANGE_TOPIC_NAME = os.getenv("ORDER_PROCESSING_EXCHANGE_TOPIC_NAME")
 
 # Paypal Settings
 PAYPAL_API_BASE_URL = os.getenv("PAYPAL_API_BASE_URL")

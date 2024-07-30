@@ -34,3 +34,10 @@ class CartService:
         cart_items = self.get_cart_item_list(cart_item_filters)
         cart_item_serializer = CartItemWithProductSerializer(instance=cart_items, many=True)
         return cart_item_serializer.data
+
+    def delete_cart_items_by_ids(self, cart_item_ids: List[int]) -> None:
+        self.cart_item_queryset.filter(original_id__in=cart_item_ids).delete()
+
+    @staticmethod
+    def delete_cart_items_by_queryset(cart_items: QuerySet[CartItem]) -> None:
+        cart_items.delete()

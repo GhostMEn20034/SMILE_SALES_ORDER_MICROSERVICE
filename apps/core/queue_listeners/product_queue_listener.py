@@ -1,26 +1,9 @@
-import json
-import threading
-import logging
 from django.conf import settings
 
-from services.products.product_queue_message_handler import handle_product_queue_message
-from ..message_broker.base.consumer import Consumer
+from .base_queue_listener import BaseQueueListener
+from message_handlers.product_queue_message_handler import handle_product_queue_message
 
-BINDING_KEY = 'products.#'
-
-class ProductQueueListener(threading.Thread):
-    def __init__(self):
-        super().__init__()
-        self.consumer = Consumer(
-            exchange_name=settings.PRODUCT_CRUD_EXCHANGE_TOPIC_NAME,
-            exchange_type="topic"
-        )
-        self.consumer.bind_queue(BINDING_KEY)
-
-    def callback(self, ch, method, properties, body):
-        print(f" [x] {method.routing_key}:{json.loads(body)}")
-        handle_product_queue_message(method.routing_key, json.loads(body))
-
-    def run(self):
-        logging.info('Product Queue Listener was launched')
-        self.consumer.consume(callback=self.callback)
+class ProductQueueListener(BaseQueueListener):
+    BINDING_KEY = 'products.#'
+    exchange_name = settings.PRODUCT_CRUD_EXCHANGE_TOPIC_NAME
+    message_handler_func = staticmethod(handle_product_queue_message)

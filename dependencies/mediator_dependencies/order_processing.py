@@ -4,18 +4,22 @@ from dependencies.service_dependencies.addresses import get_address_service
 from dependencies.service_dependencies.carts import get_cart_service
 from dependencies.service_dependencies.orders import get_order_service
 from dependencies.service_dependencies.payments import get_payment_service
+from dependencies.service_dependencies.products import get_product_service
 from mediators.order_processing_coordinator import OrderProcessingCoordinator
 from services.addresses.address_service import AddressService
 from services.carts.cart_service import CartService
 from services.orders.order_service import OrderService
 from services.payments.payment_service import PaymentService
 from mediators.service_list.order_processing_services import OrderProcessingServices
+from replicators.order_processing_replicator import OrderProcessingReplicator
+from services.products.product_service import ProductService
 
 
 def get_order_processing_coordinator(order_service: Optional[OrderService] = None,
                                      payment_service: Optional[PaymentService] = None,
                                      address_service: Optional[AddressService] = None,
-                                     cart_service: Optional[CartService] = None, ):
+                                     cart_service: Optional[CartService] = None,
+                                     product_service: Optional[ProductService] = None,):
     if not order_service:
         order_service = get_order_service()
 
@@ -28,11 +32,17 @@ def get_order_processing_coordinator(order_service: Optional[OrderService] = Non
     if not cart_service:
         cart_service = get_cart_service()
 
+    if not product_service:
+        product_service = get_product_service()
+
     services = OrderProcessingServices(
         order_service=order_service,
         payment_service=payment_service,
         address_service=address_service,
         cart_service=cart_service,
+        product_service=product_service,
     )
 
-    return OrderProcessingCoordinator(services)
+    order_processing_replicator = OrderProcessingReplicator()
+
+    return OrderProcessingCoordinator(services, order_processing_replicator)

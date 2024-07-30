@@ -32,4 +32,4 @@ class Payment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.provider} payment {self.provider_payment_id}"
+        return f"{self.provider} {self.type} {self.provider_payment_id}"

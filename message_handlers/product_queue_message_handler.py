@@ -2,9 +2,9 @@ from typing import Any
 
 from apps.products.param_classes.attach_to_event_params import AttachToEventParams
 from apps.products.param_classes.detach_from_event_params import DetachFromEventParams
-from .replication.create import ProductCreator
-from .replication.update import ProductModifier
-from .replication.delete import ProductRemover
+from services.products.replication.create import ProductCreator
+from services.products.replication.update import ProductModifier
+from services.products.replication.delete import ProductRemover
 
 def handle_product_queue_message(routing_key: str, message: Any):
     if routing_key == 'products.crud.create.one':

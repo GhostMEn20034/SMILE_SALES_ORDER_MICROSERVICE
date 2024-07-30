@@ -16,12 +16,12 @@ from param_classes.orders.order_list import OrderListParams
 from services.orders.order_service import OrderService
 from param_classes.order_processing_coordinator.order_creation import OrderCreationParams
 from param_classes.order_processing_coordinator.order_cancelation import OrderCancellationParams
+from ..payments.serializers.api_serializers import PaymentSerializer
 
 
 class OrderViewSet(viewsets.ViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = CustomPagination
-
 
     lookup_field = 'order_uuid'
 
@@ -71,7 +71,6 @@ class OrderViewSet(viewsets.ViewSet):
         serializer = OrderListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-
     def get_order_creation_essentials(self, request, *args, **kwargs) -> Response:
         order_creation_essentials = self.order_processing_coordinator.get_order_creation_essentials(
             user_id=request.user.id,
@@ -86,11 +85,23 @@ class OrderViewSet(viewsets.ViewSet):
     def cancel_order(self, request, order_uuid: uuid.UUID, *args, **kwargs) -> Response:
         order_cancellation_params = OrderCancellationParams(
             order_uuid=order_uuid,
+            user_id=request.user.id,
         )
-        modified_order = self.order_processing_coordinator.cancel_order(order_cancellation_params)
-        serializer = OrderSerializer(instance=modified_order)
+        order_cancellation_result = self.order_processing_coordinator.cancel_order(order_cancellation_params)
+        order_serializer = OrderSerializer(instance=order_cancellation_result.order)
 
-        return Response(data={"order": serializer.data}, status=status.HTTP_200_OK)
+        payment_data = None
+        if payment := order_cancellation_result.payment:
+            payment_serializer = PaymentSerializer(instance=payment)
+            payment_data = payment_serializer.data
+
+        return Response(
+            data={
+                "order": order_serializer.data,
+                "payment": payment_data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def get_order_list_filters(self, request, *args, **kwargs) -> Response:
         order_status = request.query_params.get('order_status')

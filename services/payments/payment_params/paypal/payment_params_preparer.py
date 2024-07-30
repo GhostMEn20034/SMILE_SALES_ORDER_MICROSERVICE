@@ -89,6 +89,4 @@ class PayPalPaymentParamsPreparer:
             items=purchase_unit_build_result.purchase_unit_items,
         )
 
-        print(purchase_unit.amount.breakdown.to_dict())
-
         return purchase_unit

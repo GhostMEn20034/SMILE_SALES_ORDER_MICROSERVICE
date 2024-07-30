@@ -27,6 +27,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field='original_id')
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, to_field='original_id', null=True)
     status = models.CharField(max_length=10, choices=order_status_choices, default='pending', db_index=True)
+    is_abandoned = models.BooleanField(default=False)
     archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,6 +35,23 @@ class Order(models.Model):
     cancelled_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     returned_at = models.DateTimeField(null=True, blank=True)
+
+    def is_canceled(self) -> bool:
+        return self.status == 'cancelled'
+
+    def is_finalized(self) -> bool:
+        final_statuses = ['delivered', 'returned']
+        return self.status in final_statuses
+
+    def is_shipped(self) -> bool:
+        return self.status == 'shipped'
+
+    def is_pending(self) -> bool:
+        return self.status == 'pending'
+
+    def is_processed(self) -> bool:
+        return self.status == 'processed'
+
 
     def __str__(self):
         return f'Order № {self.order_uuid} created by {self.user.email}'

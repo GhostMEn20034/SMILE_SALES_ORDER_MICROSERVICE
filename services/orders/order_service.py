@@ -1,12 +1,13 @@
 import uuid
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
+from copy import deepcopy
 
 from django.db import transaction
 from django.db.models import QuerySet, Prefetch, Sum, F
 
-from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders
+from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders, OrderAlreadyCanceled, OrderIsFinalized, \
+    OrderIsShipping
 from apps.orders.models import Order, OrderItem
-from apps.products.models import Product
 from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.orders.order_list import OrderListParams
@@ -22,7 +23,10 @@ class OrderService:
 
     def create_order(self, params: CreateOrderParams) -> CreateOrderResult:
         with transaction.atomic():
-            order: Order = self.order_queryset.create(user_id=params.user_id, address_id=params.address_id)
+            order: Order = self.order_queryset.create(
+                user_id=params.user_id, address_id=params.address_id,
+                is_abandoned=True,
+            )
             # Make Order Items Bulk Insert
             order_items = []
             for cart_item in params.cart_items:
@@ -46,21 +50,38 @@ class OrderService:
                 order_items=order_items,
             )
 
-    def cancel_order(self, order_uuid: uuid.UUID) -> Order:
+    def cancel_order(self, order_uuid: uuid.UUID, user_id: int) -> Tuple[Order, Order]:
         """
-        Sets Order's status to "canceled" and return modified order object
+        Sets Order's status to "canceled" and return modified order object.
+        Potential errors:
+            - If order is already canceled, OrderAlreadyCanceled exception will be raised.
+            - if the order is already finalized, OrderIsFinalized exception will be raised.
         """
-        order: Order = self.order_queryset.get(order_uuid=order_uuid)
-        order.status = "cancelled"
-        order.save()
-        return order
+        order: Order = self.order_queryset.prefetch_related('order_items').get(order_uuid=order_uuid, user_id=user_id)
+        if order.is_canceled():
+            raise OrderAlreadyCanceled
 
-    def process_order(self, order_uuid: uuid.UUID) -> Order:
+        if order.is_shipped():
+            raise OrderIsShipping
+
+        if order.is_finalized():
+            raise OrderIsFinalized
+
+        order_before_update = deepcopy(order)
+
+        order.status = "cancelled"
+        order.is_abandoned = False
+        order.save()
+
+        return order, order_before_update
+
+    def process_order(self, order_uuid: uuid.UUID, user_id: int) -> Order:
         """
         Sets Order's status to "processed" and return modified order object
         """
-        order: Order = self.order_queryset.get(order_uuid=order_uuid)
+        order: Order = self.order_queryset.get(order_uuid=order_uuid, user_id=user_id)
         order.status = "processed"
+        order.is_abandoned = False
         order.save()
         return order
 
@@ -76,7 +97,8 @@ class OrderService:
         time_filters = filter_resolver.resolve_time_filter()
         time_filters['archived'] = time_filters.get('archived', False)
 
-        orders = self.order_queryset.filter(user_id=params.user_id, **order_status_filter, **time_filters) \
+        orders = self.order_queryset.filter(is_abandoned=False, user_id=params.user_id,
+                                            **order_status_filter, **time_filters) \
             .select_related('address').prefetch_related(
             Prefetch('order_items', queryset=self.order_items_queryset.select_related('product'))
         ).annotate(
@@ -100,7 +122,7 @@ class OrderService:
                 Prefetch('order_items', queryset=self.order_items_queryset.select_related('product'))
             ).prefetch_related('payments').annotate(
                 total_amount_before_tax=Sum(F('order_items__amount')),
-                total_tax = Sum(F('order_items__tax_per_unit') * F('order_items__quantity')),
+                total_tax=Sum(F('order_items__tax_per_unit') * F('order_items__quantity')),
             ).get(user_id=user_id, order_uuid=order_uuid)
         except Order.DoesNotExist:
             raise OrderDoesNotExist
