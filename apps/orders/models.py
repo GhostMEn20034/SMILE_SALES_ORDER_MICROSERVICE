@@ -29,6 +29,7 @@ class Order(models.Model):
     status = models.CharField(max_length=10, choices=order_status_choices, default='pending', db_index=True)
     is_abandoned = models.BooleanField(default=False)
     archived = models.BooleanField(default=False)
+    currency = models.CharField(max_length=3, default='USD')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
@@ -39,9 +40,15 @@ class Order(models.Model):
     def is_canceled(self) -> bool:
         return self.status == 'cancelled'
 
-    def is_finalized(self) -> bool:
+    def is_completed(self) -> bool:
         final_statuses = ['delivered', 'returned']
         return self.status in final_statuses
+
+    def is_delivered(self) -> bool:
+        return self.status == 'delivered'
+
+    def is_returned(self) -> bool:
+        return self.status == 'returned'
 
     def is_shipped(self) -> bool:
         return self.status == 'shipped'
@@ -52,7 +59,6 @@ class Order(models.Model):
     def is_processed(self) -> bool:
         return self.status == 'processed'
 
-
     def __str__(self):
         return f'Order № {self.order_uuid} created by {self.user.email}'
 
@@ -61,7 +67,6 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, to_field='order_uuid', related_name='order_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, to_field="object_id")
     price_per_unit = models.DecimalField(max_digits=13, decimal_places=2)
-    currency = models.CharField(max_length=3, default='USD')
     tax_rate = models.DecimalField(max_digits=3, decimal_places=2, validators=[
         MinValueValidator(Decimal(0)),
         MaxValueValidator(Decimal(1))
@@ -78,6 +83,10 @@ class OrderItem(models.Model):
         output_field=models.DecimalField(max_digits=13, decimal_places=2),
         db_persist=True,
     )
+
+    @property
+    def price_per_unit_with_tax(self):
+        return round(self.price_per_unit + self.tax_per_unit, 2)
 
     @property
     def amount_with_tax(self):

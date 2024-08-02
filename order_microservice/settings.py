@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.payments',
     'apps.webhooks',
     'apps.recommendations',
+    'apps.refunds',
 
     # Third-party apps
     'rest_framework',
@@ -65,7 +66,7 @@ ROOT_URLCONF = 'order_microservice.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,6 +112,10 @@ DRAMATIQ_BROKER = {
     ]
 }
 
+DRAMATIQ_CRONTAB = {
+    "REDIS_URL": DRAMATIQ_BROKER_URL,
+}
+
 DRAMATIQ_RESULT_BACKEND = {
     "BACKEND": "dramatiq.results.backends.redis.RedisBackend",
     "BACKEND_OPTIONS": {
@@ -121,6 +126,8 @@ DRAMATIQ_RESULT_BACKEND = {
     }
 }
 
+# Every n minutes cron job will find abandoned orders and release products from these orders
+CHECK_ABANDONED_ORDERS_EVERY_MINUTES=int(os.getenv("CHECK_ABANDONED_ORDERS_EVERY_MINUTES", "5"))
 
 CACHES = {
     "default": {
@@ -179,13 +186,14 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # AMPQ settings
@@ -198,3 +206,12 @@ ORDER_PROCESSING_EXCHANGE_TOPIC_NAME = os.getenv("ORDER_PROCESSING_EXCHANGE_TOPI
 PAYPAL_API_BASE_URL = os.getenv("PAYPAL_API_BASE_URL")
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
 PAYPAL_SECRET = os.getenv("PAYPAL_SECRET")
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False

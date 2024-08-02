@@ -1,0 +1,36 @@
+{% load static %}
+
+<td style="padding-top: 30px;">
+    <table width="560" align="center" cellpadding="0" cellspacing="0" border="0" class="devicewidthinner"
+           style="border-bottom: 1px solid #eeeeee; text-align: center;">
+        <tbody>
+        <tr>
+            <td style="padding-bottom: 10px;">
+                <a href="{{ frontend_url }}">
+                    <img height="60px" src="https://i.postimg.cc/8cfgL5yS/smile-sales-logo-light-theme.png" alt="Brand Icon">
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 14px; line-height: 18px; color: #666666;">
+                3828 Shevchenko Avenue
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 14px; line-height: 18px; color: #666666;">
+                Kyiv, Ukraine, 01488
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 14px; line-height: 18px; color: #666666;">
+                Phone: +380-44-123-4567 | Email: smilesalesinfo@example.com
+            </td>
+        </tr>
+        <tr style="padding-top: 5px;">
+            <td style="font-size: 14px; line-height: 18px; color: #666666; padding-bottom: 25px;">
+                <strong>Order Number:</strong> {{ order.order_uuid }} | <strong>Order Date:</strong> {{ order.created_at|date:"F d, Y" }}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</td>

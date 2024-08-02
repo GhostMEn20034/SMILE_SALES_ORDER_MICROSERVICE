@@ -5,15 +5,17 @@ from copy import deepcopy
 from django.db import transaction
 from django.db.models import QuerySet, Prefetch, Sum, F
 
-from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders, OrderAlreadyCanceled, OrderIsFinalized, \
+from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders, OrderAlreadyCanceled, OrderIsCompleted, \
     OrderIsShipping
 from apps.orders.models import Order, OrderItem
+from apps.payments.models import Payment
 from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.orders.order_list import OrderListParams
 from result_classes.orders.create_order import CreateOrderResult
 from services.orders.order_list_filters.order_list_filters_generator import OrderListFiltersGenerator
 from services.orders.order_list_filters.order_list_filters_resolver import OrderListFiltersResolver
+from apps.orders.tasks.email_sending import send_email_with_order_confirmation
 
 
 class OrderService:
@@ -64,8 +66,8 @@ class OrderService:
         if order.is_shipped():
             raise OrderIsShipping
 
-        if order.is_finalized():
-            raise OrderIsFinalized
+        if order.is_completed():
+            raise OrderIsCompleted
 
         order_before_update = deepcopy(order)
 
@@ -148,4 +150,27 @@ class OrderService:
         order.archived = archived_flag
         order.save()
 
+        return order
+
+    def get_by_uuid_if_owner(self, user_id: int, order_uuid: uuid.UUID) -> Order:
+        """
+        Returns true if order is owned by user
+        """
+        order: Order = self.order_queryset.get(user_id=user_id, order_uuid=order_uuid)
+        return order
+
+    @staticmethod
+    def send_order_confirmation_email(user_id: int, order_id: uuid.UUID, payment: Payment) -> None:
+        """
+        Sends a notification email about order confirmation to the user.
+        :param user_id: User's identifier, so we can know who is email receiver.
+        :param order_id: Order's identifier, which data will be in email confirmation.
+        :param payment: Created payment, related with specified order. Ensures us that everything is paid.
+        """
+        send_email_with_order_confirmation.send(user_id, str(order_id), payment.provider_payment_id)
+
+    @staticmethod
+    def mark_as_returned(order: Order) -> Order:
+        order.status = "returned"
+        order.save()
         return order

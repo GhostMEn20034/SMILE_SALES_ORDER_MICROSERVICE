@@ -1,0 +1,19 @@
+<td style="padding: 0 10px;">
+    <table width="560" align="center" cellpadding="0" cellspacing="0" border="0" class="devicewidthinner">
+        <tbody>
+            <tr>
+                <td colspan="2" style="font-size: 16px; font-weight: bold; color: #666666; padding-bottom: 5px;">
+                    Payment Method (Bank Transfer)
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 55%; font-size: 14px; line-height: 18px; color: #666666;">
+                    Bank Name: {{ payment.provider|capfirst }}
+                </td>
+                <td style="width: 45%; font-size: 14px; line-height: 18px; color: #666666;">
+                    Payment Number: {{ payment.provider_payment_id }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</td>

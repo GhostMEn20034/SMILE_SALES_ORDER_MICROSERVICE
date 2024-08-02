@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -7,20 +9,24 @@ from apps.orders.models import Order
 from apps.payments.exceptions import PaymentCaptureFailedException, PaymentCreationFailedException, \
     PaymentToRefundNotFoundException, PaymentRefundFailedException
 from apps.payments.models import Payment
+from apps.refunds.admin_exceptions import RefundApprovalFailedException
+from apps.refunds.models import Refund
 from mediators.service_list.order_processing_services import OrderProcessingServices
 from param_classes.carts.cart_item_filters import CartItemFilters
 from param_classes.order_processing_coordinator.order_cancelation import OrderCancellationParams
 from param_classes.order_processing_coordinator.order_creation import OrderCreationParams
+from param_classes.order_processing_coordinator.refund_payment_approval import RefundPaymentApprovalParams
 from param_classes.orders.create_order import CreateOrderParams
 from param_classes.payments.capture_payment_params import CapturePaymentParams
 from param_classes.payments.initialize_payment import InitializePaymentParams
 from param_classes.payments.payment_creation import PaymentCreationParams
 from param_classes.payments.refund_creation import RefundCreationParams
+from param_classes.refunds.refund_request_creation import RefundRequestCreationParams
 from result_classes.orders.create_order import CreateOrderResult
 from result_classes.orders.order_cancellation import OrderCancellationResult
 from result_classes.orders.order_creation_essentials import OrderCreationEssentialsParams
 from replicators.order_processing_replicator import OrderProcessingReplicator
-from apps.orders.exceptions import OrderDoesNotExist
+from apps.orders.exceptions import OrderDoesNotExist, DeliveredOrdersOnlyEligibleForRefundException
 
 
 class OrderProcessingCoordinator:
@@ -101,6 +107,7 @@ class OrderProcessingCoordinator:
             if created_payment is None:
                 raise PaymentCaptureFailedException
 
+            self.services.order_service.send_order_confirmation_email(data.user_id, data.order_id, created_payment)
             return created_payment
 
     def _refund_payment_on_cancel(self, order: Order) -> Payment:
@@ -163,3 +170,65 @@ class OrderProcessingCoordinator:
                 order=order_after_update,
                 payment=payment,
             )
+
+    def create_refund_request(self, params: RefundRequestCreationParams) -> Refund:
+        try:
+            order = self.services.order_service.get_by_uuid_if_owner(
+                user_id=params.user_id,
+                order_uuid=params.order_id,
+            )
+        except Order.DoesNotExist:
+            raise OrderDoesNotExist
+
+        if not order.is_delivered():
+            raise DeliveredOrdersOnlyEligibleForRefundException
+
+        refund = self.services.refund_service.create_refund(params)
+        return refund
+
+    def _refund_payment_on_refund_approval(self, params: RefundPaymentApprovalParams) -> Optional[Payment]:
+        refund_response = self.services.payment_service.perform_paypal_payment_refund(
+            params.payment, params.refund_reason
+        )
+        create_refund_params = RefundCreationParams(
+            refund_id=refund_response.refund_id,
+            user_id=int(params.user_id),
+            order_id=params.order_id,
+            provider=params.payment.provider,
+            status="success",
+            refund_breakdown=refund_response.refund_breakdown,
+        )
+        created_refund = self.services.payment_service.create_refund(create_refund_params)
+
+        return created_refund
+
+    def approve_refund_request(self, refund: Refund) -> None:
+        with transaction.atomic():
+            try:
+                payment = refund.order.payments.get(type="payment")
+            except Payment.DoesNotExist:
+                raise RefundApprovalFailedException("There's no payment for this order")
+
+            order = refund.order
+
+            refund_payment_approval_params =  RefundPaymentApprovalParams(
+                payment=payment,
+                refund_reason=refund.get_reason_for_return_display(),
+                order_id=order.order_uuid,
+                user_id=int(order.user_id),
+            )
+            try:
+                created_refund = self._refund_payment_on_refund_approval(refund_payment_approval_params)
+            except PaymentRefundFailedException:
+                raise RefundApprovalFailedException("Payment refund failed")
+
+            if created_refund is None:
+                raise RefundApprovalFailedException("Payment is not created")
+
+            self.services.order_service.mark_as_returned(order)
+            self.services.refund_service.approve_refund(refund)
+
+    def reject_refund_request(self, refund: Refund, rejection_reason: str) -> None:
+        with transaction.atomic():
+            self.services.refund_service.reject_refund(refund, rejection_reason)
+

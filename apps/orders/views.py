@@ -16,7 +16,7 @@ from param_classes.orders.order_list import OrderListParams
 from services.orders.order_service import OrderService
 from param_classes.order_processing_coordinator.order_creation import OrderCreationParams
 from param_classes.order_processing_coordinator.order_cancelation import OrderCancellationParams
-from ..payments.serializers.api_serializers import PaymentSerializer
+from apps.payments.serializers.api_serializers import PaymentSerializer
 
 
 class OrderViewSet(viewsets.ViewSet):

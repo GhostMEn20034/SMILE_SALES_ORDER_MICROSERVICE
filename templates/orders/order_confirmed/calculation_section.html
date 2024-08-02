@@ -1,0 +1,41 @@
+{% for order_item in order.order_items.all %}
+    <tr>
+        <td style="padding-top: 0;">
+            <table width="560" align="center" cellpadding="0" cellspacing="0" border="0" class="devicewidthinner"
+                   style="border-bottom: 1px solid #eeeeee;">
+                <tbody>
+                <tr>
+                    <td rowspan="4" style="padding-right: 10px; padding-bottom: 10px; width: 120px;">
+                        <img style="height: 80px; object-fit: scale-down; width: 100%;" src="{{ order_item.product.image }}"
+                             alt="{{ order_item.product.name }}"/>
+                    </td>
+                    <td colspan="2" style="font-size: 14px; font-weight: bold; color: #666666; padding-bottom: 5px; width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <a href="{{ frontend_url }}/item/{{ order_item.product_id }}" style="color: #666666; text-decoration: none;">
+                            {{ order_item.product.name }}
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size: 14px; line-height: 18px; color: #757575;">
+                        Quantity: {{ order_item.quantity }}
+                    </td>
+                    <td style="width: 140px;"></td>
+                </tr>
+                <tr>
+                    <td style="font-size: 14px; line-height: 18px; color: #757575;"></td>
+                    <td style="font-size: 14px; line-height: 18px; color: #757575; text-align: right; white-space: nowrap;">
+                        {{ order.currency }}
+                        {{ order_item.price_per_unit }} Per Unit
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size: 14px; line-height: 18px; color: #757575; padding-bottom: 10px;"></td>
+                    <td style="font-size: 14px; line-height: 18px; color: #757575; text-align: right; padding-bottom: 10px;">
+                        <b style="color: #666666;">{{ order.currency }} {{ order_item.amount }}</b> Total
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+{% endfor %}

@@ -20,12 +20,17 @@ class OrderAlreadyCanceled(APIException):
     default_code = 'order_already_canceled'
 
 
-class OrderIsFinalized(APIException):
+class OrderIsCompleted(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = 'Not able to cancel the order is already finalized'
-    default_code = 'order_is_finalized'
+    default_detail = 'Not able to cancel the order is already completed'
+    default_code = 'order_is_completed'
 
-class OrderIsShipping:
+class OrderIsShipping(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Order is in shipping process'
     default_code = 'order_is_shipping'
+
+class DeliveredOrdersOnlyEligibleForRefundException(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = 'Only delivered orders are eligible for refunds'
+    default_code = 'delivered_orders_only_eligible_for_refund'

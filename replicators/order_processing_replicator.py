@@ -1,5 +1,6 @@
 from typing import Iterable
 from django.conf import settings
+from django.db import transaction
 
 from apps.orders.models import OrderItem
 from apps.core.tasks import perform_data_topic_replication

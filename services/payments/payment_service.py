@@ -3,7 +3,6 @@ from typing import Optional
 from django.conf import settings
 from django.db.models import QuerySet
 
-from apps.orders.models import Order
 from apps.payments.models import Payment
 from apps.payments.serializers.api_serializers import PaymentSerializer
 from param_classes.payments.build_purchase_unit_params import BuildPurchaseUnitParams
@@ -60,7 +59,7 @@ class PaymentService:
             reference_id=str(params.created_order.order.order_uuid),
             description="Order in Smile Sales",
             order_items=params.created_order.order_items,
-            currency_code="USD",
+            currency_code=params.created_order.order.currency,
         )
 
         purchase_unit = PayPalPaymentParamsPreparer.build_purchase_unit(build_purchase_unit_params)
