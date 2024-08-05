@@ -15,7 +15,7 @@ from param_classes.orders.order_list import OrderListParams
 from result_classes.orders.create_order import CreateOrderResult
 from services.orders.order_list_filters.order_list_filters_generator import OrderListFiltersGenerator
 from services.orders.order_list_filters.order_list_filters_resolver import OrderListFiltersResolver
-from apps.orders.tasks.email_sending import send_email_with_order_confirmation
+from apps.orders.tasks.email_sending import send_email_with_order_confirmation, send_email_about_order_cancellation
 
 
 class OrderService:
@@ -163,11 +163,26 @@ class OrderService:
     def send_order_confirmation_email(user_id: int, order_id: uuid.UUID, payment: Payment) -> None:
         """
         Sends a notification email about order confirmation to the user.
-        :param user_id: User's identifier, so we can know who is email receiver.
+        :param user_id: User's identifier to find out who's an email receiver.
         :param order_id: Order's identifier, which data will be in email confirmation.
         :param payment: Created payment, related with specified order. Ensures us that everything is paid.
         """
         send_email_with_order_confirmation.send(user_id, str(order_id), payment.provider_payment_id)
+
+    @staticmethod
+    def send_order_cancellation_email(user_id: int, order_id: uuid.UUID, payment: Optional[Payment] = None) -> None:
+        """
+        Sends a notification email about order cancellation to the user.
+        :param user_id: User's identifier to find out who's an email receiver.
+        :param order_id: Order's identifier, which data will be in email confirmation.
+        :param payment: Created payment, if it is not null, means that in addition
+        to the fact that the order was canceled, all money spent on it was refunded.
+        """
+        payment_id = None
+        if payment:
+            payment_id = payment.provider_payment_id
+
+        send_email_about_order_cancellation.send(user_id, str(order_id), payment_id)
 
     @staticmethod
     def mark_as_returned(order: Order) -> Order:

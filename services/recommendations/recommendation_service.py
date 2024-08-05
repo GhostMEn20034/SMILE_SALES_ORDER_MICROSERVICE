@@ -21,6 +21,6 @@ class RecommendationService:
         ). \
         exclude(
             orderitem__order__status__in=excluded_statuses,
-        ).order_by('-price')
+        ).order_by('-price').distinct()
 
         return products

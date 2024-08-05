@@ -1,61 +1,111 @@
 {% load static %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <title>Order Confirmed</title>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Order Confirmed</title>
 
-        <!-- Start Common CSS -->
-        <style type="text/css">
-            #outlook a {padding:0;}
-            body{width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0; font-family: Helvetica, arial, sans-serif;}
-            .ExternalClass {width:100%;}
-            .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;}
-            .backgroundTable {margin:0; padding:0; width:100% !important; line-height: 100% !important;}
-            .main-temp table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; font-family: Helvetica, arial, sans-serif;}
-            .main-temp table td {border-collapse: collapse;}
-        </style>
-        <!-- End Common CSS -->
-    </head>
-    <body>
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="backgroundTable main-temp" style="background-color: #d5d5d5;">
-            <tbody>
+    <!-- Start Common CSS -->
+    <style type="text/css">
+        #outlook a {
+            padding: 0;
+        }
+
+        body {
+            width: 100% !important;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Helvetica, arial, sans-serif;
+        }
+
+        .ExternalClass {
+            width: 100%;
+        }
+
+        .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {
+            line-height: 100%;
+        }
+
+        .backgroundTable {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            line-height: 100% !important;
+        }
+
+        .main-temp table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+            font-family: Helvetica, arial, sans-serif;
+        }
+
+        .main-temp table td {
+            border-collapse: collapse;
+        }
+
+        .product-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-name a {
+            color: #1976d2;
+            text-decoration: none;
+            line-height: normal;
+        }
+
+        .product-name a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <!-- End Common CSS -->
+</head>
+<body>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" class="backgroundTable main-temp"
+       style="background-color: #d5d5d5;">
+    <tbody>
+    <tr>
+        <td>
+            <table width="600" align="center" cellpadding="15" cellspacing="0" border="0" class="devicewidth"
+                   style="background-color: #ffffff;">
+                <tbody>
+                <!-- Start header Section -->
                 <tr>
-                    <td>
-                        <table width="600" align="center" cellpadding="15" cellspacing="0" border="0" class="devicewidth" style="background-color: #ffffff;">
-                            <tbody>
-                                <!-- Start header Section -->
-                                <tr>
-                                   {% include 'orders/order_confirmed/header_section.html' %}
-                                </tr>
-                                <!-- End header Section -->
-
-                                <!-- Start address Section -->
-                                <tr>
-                                    {% include 'orders/order_confirmed/address_section.html' %}
-                                </tr>
-                                <!-- End address Section -->
-
-                                <!-- Start product Section -->
-                                {% include 'orders/order_confirmed/product_section.html' %}
-                                <!-- End product Section -->
-
-                                <!-- Start calculation Section -->
-                                <tr>
-                                    {% include 'orders/order_confirmed/calculation_section.html' %}
-                                </tr>
-                                <!-- End calculation Section -->
-
-                                <!-- Start payment method Section -->
-                                <tr>
-                                    {% include 'orders/order_confirmed/payment_method_section.html' %}
-                                </tr>
-                                <!-- End payment method Section -->
-                            </tbody>
-                        </table>
-                    </td>
+                    {% include 'orders/order_confirmed/header_section.html' %}
                 </tr>
-            </tbody>
-        </table>
-    </body>
+                <!-- End header Section -->
+
+                <!-- Start address Section -->
+                <tr>
+                    {% include 'orders/order_confirmed/address_section.html' %}
+                </tr>
+                <!-- End address Section -->
+
+                <!-- Start product Section -->
+                {% include 'orders/order_confirmed/product_section.html' %}
+                <!-- End product Section -->
+
+                <!-- Start calculation Section -->
+                <tr>
+                    {% include 'orders/order_confirmed/calculation_section.html' %}
+                </tr>
+                <!-- End calculation Section -->
+
+                <!-- Start payment method Section -->
+                <tr>
+                    {% include 'orders/order_confirmed/payment_method_section.html' %}
+                </tr>
+                <!-- End payment method Section -->
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
 </html>

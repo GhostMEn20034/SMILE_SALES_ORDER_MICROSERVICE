@@ -12,6 +12,7 @@ from replicators.order_processing_replicator import OrderProcessingReplicator
 @cron(f"*/{settings.CHECK_ABANDONED_ORDERS_EVERY_MINUTES} * * * *")  # Run task every N minutes
 @dramatiq.actor
 def release_products_from_abandoned_orders():
+    release_products_from_abandoned_orders.logger.info("Searching for abandoned orders...")
     # Calculate the time threshold (current time minus 45 minutes)
     time_threshold = timezone.now() - timedelta(minutes=45)
     abandoned_orders = Order.objects.filter(is_abandoned=True, created_at__lt=time_threshold) \
@@ -36,3 +37,8 @@ def release_products_from_abandoned_orders():
         order_processing_replicator.release_products(all_order_items)
         # Delete all matched abandoned orders
         abandoned_orders.delete()
+
+        order_ids = [order.order_uuid for order in abandoned_orders]
+        release_products_from_abandoned_orders.logger.info(
+            f"Products released from the abandoned orders: {','.join(order_ids)}"
+        )

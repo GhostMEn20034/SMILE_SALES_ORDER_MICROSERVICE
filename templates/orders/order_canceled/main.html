@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Canceled</title>
+    <!-- Start Common CSS -->
+    <style>
+        .brandLogo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .typography {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+    <!-- End Common CSS -->
+</head>
+<body>
+<div>
+    <div class="brandLogo" style="margin-bottom: 50px">
+        <a href="{{ frontend_url }}">
+            <img height="60px" src="https://i.postimg.cc/8cfgL5yS/smile-sales-logo-light-theme.png" alt="Brand Icon">
+        </a>
+    </div>
+    <div>
+        <p class="typography">
+            Dear {{ user.first_name }} {{ user.last_name }},
+        </p>
+        <p class="typography">
+            We have successfully canceled your order <b>#{{ order_id }}</b>.
+            {% if payment_id %}
+                All funds paid for this order are refunded to the original payment method.<br>
+            {% endif %}
+        </p>
+        <p class="typography">
+            If you have any questions or require further assistance,
+            please don't hesitate to contact our customer support team
+            at +380-44-123-4567 or smilesalesinfo@example.com.
+        </p>
+        <p class="typography">
+            Thank you for choosing Smile Sales.
+        </p>
+        <p class="typography">
+            Sincerely, <br>
+            Smile Sales <br>
+            Smile Sales customer team
+        </p>
+    </div>
+</div>
+</body>
+</html>

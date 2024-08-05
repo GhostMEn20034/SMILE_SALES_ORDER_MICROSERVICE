@@ -5,12 +5,15 @@
                    style="border-bottom: 1px solid #eeeeee;">
                 <tbody>
                 <tr>
-                    <td rowspan="4" style="padding-right: 10px; padding-bottom: 10px; width: 120px;">
-                        <img style="height: 80px; object-fit: scale-down; width: 100%;" src="{{ order_item.product.image }}"
+                    <td rowspan="4" style="padding-right: 10px; padding-bottom: 10px; width: 120px; vertical-align: top">
+                        <img style="height: 80px; object-fit: scale-down; width: 100%;"
+                             src="{{ order_item.product.image }}"
                              alt="{{ order_item.product.name }}"/>
                     </td>
-                    <td colspan="2" style="font-size: 14px; font-weight: bold; color: #666666; padding-bottom: 5px; width: 300px;">
-                        {{ order_item.product.name }}
+                    <td colspan="2" class="product-name" style="font-size: 14px; font-weight: bold; color: #666666; padding-bottom: 5px; width: 275px;">
+                        <a href="{{ frontend_url }}/item/{{ order_item.product_id }}">
+                            {{ order_item.product.name }}
+                        </a>
                     </td>
                 </tr>
                 <tr>

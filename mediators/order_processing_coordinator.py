@@ -165,6 +165,9 @@ class OrderProcessingCoordinator:
 
             self.services.product_service.release_from_order(order_items)
             self.order_processing_replicator.release_products(order_items)
+            self.services.order_service.send_order_cancellation_email(
+                params.user_id, order_after_update.order_uuid, payment
+            )
 
             return OrderCancellationResult(
                 order=order_after_update,
