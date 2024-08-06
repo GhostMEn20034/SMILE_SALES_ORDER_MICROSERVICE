@@ -23,7 +23,7 @@ class Payment(models.Model):
     )
     currency = models.CharField(max_length=3, default='USD')
     status = models.CharField(max_length=15, choices=PaymentStatuses.choices, default=PaymentStatuses.PENDING)
-    provider = models.CharField(max_length=30)
+    provider = models.CharField(max_length=30) # Payment provider (PayPal, GooglePay, etc.)
     type = models.CharField(max_length=15, choices=PaymentTypes.choices, default=PaymentTypes.PAYMENT)
     provider_payment_id = models.CharField(max_length=255, unique=True) # Payment identifier given
     # by the payment provider

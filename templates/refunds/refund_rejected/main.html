@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Refund Request Denied - Order #{{ refund.order_id }}</title>
+    <style>
+        .brandLogo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .typography {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="brandLogo" style="margin-bottom: 50px">
+            <a href="{{ frontend_url }}">
+                <img height="60px" src="https://i.postimg.cc/8cfgL5yS/smile-sales-logo-light-theme.png" alt="Brand Icon">
+            </a>
+        </div>
+        <div>
+            <p class="typography">
+                Dear, {{ refund.user.first_name }} {{ refund.user.last_name }}
+            </p>
+            <p class="typography">
+                Thank you for contacting us regarding your refund request for order number {{ refund.order_id }}.
+                We understand that you requested a refund due to {{ refund.get_reason_for_return_display }}.
+            </p>
+            <p class="typography">
+                We regret to inform you that your refund request has been denied.
+                The reason of rejection: {{ refund.rejection_reason }}.
+            </p>
+            <p class="typography">
+                Our return policy outlines the specific conditions for eligible returns and refunds.
+                We encourage you to review our policy for more details.
+            </p>
+            <p class="typography">
+                We apologize for any inconvenience this may cause.
+                If you have any questions or concerns, please don’t hesitate to contact our customer support team
+                at +380-44-123-4567 or smilesalesinfo@example.com.
+            </p>
+            <p class="typography">
+                Sincerely, <br>
+                Smile Sales <br>
+                Smile Sales customer team
+            </p>
+        </div>
+    </div>
+</body>
+</html>

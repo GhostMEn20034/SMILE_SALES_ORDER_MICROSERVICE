@@ -208,6 +208,7 @@ class OrderProcessingCoordinator:
     def approve_refund_request(self, refund: Refund) -> None:
         with transaction.atomic():
             try:
+                # Find a payment with payment type "payment" or you can call it "Regular payment"
                 payment = refund.order.payments.get(type="payment")
             except Payment.DoesNotExist:
                 raise RefundApprovalFailedException("There's no payment for this order")
@@ -221,17 +222,21 @@ class OrderProcessingCoordinator:
                 user_id=int(order.user_id),
             )
             try:
+                # Create a payment with payment type "refund"
                 created_refund = self._refund_payment_on_refund_approval(refund_payment_approval_params)
             except PaymentRefundFailedException:
                 raise RefundApprovalFailedException("Payment refund failed")
 
+            # If the payment refund is None, it means that it's not created due to payment's invalid data
             if created_refund is None:
                 raise RefundApprovalFailedException("Payment is not created")
 
             self.services.order_service.mark_as_returned(order)
             self.services.refund_service.approve_refund(refund)
+            self.services.refund_service.send_refund_request_approval_email(refund, created_refund)
 
     def reject_refund_request(self, refund: Refund, rejection_reason: str) -> None:
         with transaction.atomic():
             self.services.refund_service.reject_refund(refund, rejection_reason)
+            self.services.refund_service.send_refund_request_rejection_email(refund)
 
