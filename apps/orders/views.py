@@ -1,5 +1,7 @@
 import uuid
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
@@ -103,6 +105,8 @@ class OrderViewSet(viewsets.ViewSet):
             status=status.HTTP_200_OK,
         )
 
+    # Cache order list filters for 3 hours
+    @method_decorator(cache_page(60 * 60 * 3))
     def get_order_list_filters(self, request, *args, **kwargs) -> Response:
         order_status = request.query_params.get('order_status')
         filters = self.order_service.get_order_list_filters(order_status)
