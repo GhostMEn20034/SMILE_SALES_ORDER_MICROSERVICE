@@ -166,6 +166,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('JWT', 'Bearer'),
     'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
     "SIGNING_KEY": os.getenv("JWT_SIGNING_KEY", SECRET_KEY),
+    "USER_ID_FIELD": "original_id",
 }
 
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL")

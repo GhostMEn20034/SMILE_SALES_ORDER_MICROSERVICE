@@ -42,11 +42,12 @@ class OrderViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         order_creation_params: OrderCreationParams = OrderCreationParams(**serializer.validated_data)
-        payment_data = self.order_processing_coordinator.create_order_and_initialize_payment(order_creation_params)
+        order_data, payment_data = self.order_processing_coordinator.create_order_and_initialize_payment(order_creation_params)
         return Response(
             data={
                 'payment_id': payment_data.payment_id,
                 'checkout_link': payment_data.checkout_link,
+                'order_id': str(order_data.order.order_uuid),
             },
             status=status.HTTP_201_CREATED,
         )

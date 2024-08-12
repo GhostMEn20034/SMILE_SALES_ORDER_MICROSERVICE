@@ -1,13 +1,14 @@
 import logging
-from typing import Optional
-
+from typing import Optional, Tuple
 from django.db import transaction
 from django.utils import timezone
 
 from apps.carts.exceptions import NoSellableCartItems
 from apps.orders.models import Order
-from apps.payments.exceptions import PaymentCaptureFailedException, PaymentCreationFailedException, \
+from apps.payments.exceptions import (
+    PaymentCaptureFailedException, PaymentCreationFailedException,
     PaymentToRefundNotFoundException, PaymentRefundFailedException
+)
 from apps.payments.models import Payment
 from apps.refunds.admin_exceptions import RefundApprovalFailedException
 from apps.refunds.models import Refund
@@ -27,17 +28,20 @@ from result_classes.orders.order_cancellation import OrderCancellationResult
 from result_classes.orders.order_creation_essentials import OrderCreationEssentialsParams
 from replicators.order_processing_replicator import OrderProcessingReplicator
 from apps.orders.exceptions import OrderDoesNotExist, DeliveredOrdersOnlyEligibleForRefundException
+from services.payments.payment_responses.paypal.create_payment_response import CreatePaypalPaymentResponse
 
 
 class OrderProcessingCoordinator:
     """
     Mediator class responsible for interactions related with order processing.
     """
+
     def __init__(self, services: OrderProcessingServices, order_processing_replicator: OrderProcessingReplicator):
         self.services = services
         self.order_processing_replicator = order_processing_replicator
 
-    def create_order_and_initialize_payment(self, params: OrderCreationParams):
+    def create_order_and_initialize_payment(self, params: OrderCreationParams) \
+            -> Tuple[CreateOrderResult, CreatePaypalPaymentResponse]:
         cart_item_filters = CartItemFilters(cart_owner_id=params.cart_owner_id,
                                             product_ids=params.product_ids, include_only_saleable=True)
         cart_items = self.services.cart_service.get_cart_item_list(cart_item_filters)
@@ -56,7 +60,7 @@ class OrderProcessingCoordinator:
                 )
                 # TODO: In the future, when there will be more than one payment provider,
                 #  payment method resolver need to be written
-                payment_data = self.services.payment_service.initialize_paypal_payment(create_payment_params)
+                payment_data = self.services.payment_service.initialize_payment(create_payment_params)
         except PaymentCreationFailedException as e:
             logging.error(f"{str(timezone.now())}{e.default_detail}")
             raise e
@@ -68,7 +72,7 @@ class OrderProcessingCoordinator:
                 self.order_processing_replicator.reserve_products_and_remove_cart_items(params.cart_owner_id,
                                                                                         order_items)
 
-        return payment_data
+        return created_order, payment_data
 
     def get_order_creation_essentials(self, user_id: int) -> OrderCreationEssentialsParams:
         """
@@ -80,19 +84,19 @@ class OrderProcessingCoordinator:
             addresses=addresses,
         )
 
-
     def complete_funds_transferring(self, data: CapturePaymentParams) -> Payment:
         """
         Captures the payment and updates the order status to "processed"
         """
-        # TODO: In the future, when there will be more than one payment provider,
-        #  payment method resolver need to be written
-        capture_success_data = self.services.payment_service.perform_paypal_payment_capture(data)
         with transaction.atomic():
             try:
                 modified_order = self.services.order_service.process_order(data.order_id, data.user_id)
             except Order.DoesNotExist:
                 raise OrderDoesNotExist
+
+            # TODO: In the future, when there will be more than one payment provider,
+            #  payment method resolver need to be written
+            capture_success_data = self.services.payment_service.perform_payment_capture(data)
 
             capture = capture_success_data.captures[0]
             payment_creation_params = PaymentCreationParams(
@@ -121,7 +125,7 @@ class OrderProcessingCoordinator:
         except Payment.DoesNotExist:
             raise PaymentToRefundNotFoundException
 
-        refund_response = self.services.payment_service.perform_paypal_payment_refund(
+        refund_response = self.services.payment_service.perform_payment_refund(
             payment, "Order cancelling",
         )
         create_refund_params = RefundCreationParams(
@@ -190,7 +194,7 @@ class OrderProcessingCoordinator:
         return refund
 
     def _refund_payment_on_refund_approval(self, params: RefundPaymentApprovalParams) -> Optional[Payment]:
-        refund_response = self.services.payment_service.perform_paypal_payment_refund(
+        refund_response = self.services.payment_service.perform_payment_refund(
             params.payment, params.refund_reason
         )
         create_refund_params = RefundCreationParams(
@@ -215,7 +219,7 @@ class OrderProcessingCoordinator:
 
             order = refund.order
 
-            refund_payment_approval_params =  RefundPaymentApprovalParams(
+            refund_payment_approval_params = RefundPaymentApprovalParams(
                 payment=payment,
                 refund_reason=refund.get_reason_for_return_display(),
                 order_id=order.order_uuid,
@@ -239,4 +243,3 @@ class OrderProcessingCoordinator:
         with transaction.atomic():
             self.services.refund_service.reject_refund(refund, rejection_reason)
             self.services.refund_service.send_refund_request_rejection_email(refund)
-

@@ -34,3 +34,8 @@ class DeliveredOrdersOnlyEligibleForRefundException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Only delivered orders are eligible for refunds'
     default_code = 'delivered_orders_only_eligible_for_refund'
+
+class PendingOrdersOnlyEligibleToBeProcessed(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = 'Only pending orders are eligible to be processed'
+    default_code = 'pending_orders_are_only_eligible_to_be_processed'

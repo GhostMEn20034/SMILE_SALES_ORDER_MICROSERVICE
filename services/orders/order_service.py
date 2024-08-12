@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models import QuerySet, Prefetch, Sum, F
 
 from apps.orders.exceptions import OrderDoesNotExist, TooMuchArchivedOrders, OrderAlreadyCanceled, OrderIsCompleted, \
-    OrderIsShipping
+    OrderIsShipping, PendingOrdersOnlyEligibleToBeProcessed
 from apps.orders.models import Order, OrderItem
 from apps.payments.models import Payment
 from param_classes.orders.change_archived_status import ChangeArchivedStatusParams
@@ -82,6 +82,9 @@ class OrderService:
         Sets Order's status to "processed" and return modified order object
         """
         order: Order = self.order_queryset.get(order_uuid=order_uuid, user_id=user_id)
+        if order.status != "pending":
+            raise PendingOrdersOnlyEligibleToBeProcessed
+
         order.status = "processed"
         order.is_abandoned = False
         order.save()

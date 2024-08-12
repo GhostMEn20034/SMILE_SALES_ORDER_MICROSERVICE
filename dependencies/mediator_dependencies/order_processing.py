@@ -10,15 +10,15 @@ from mediators.order_processing_coordinator import OrderProcessingCoordinator
 from services.addresses.address_service import AddressService
 from services.carts.cart_service import CartService
 from services.orders.order_service import OrderService
-from services.payments.payment_service import PaymentService
 from mediators.service_list.order_processing_services import OrderProcessingServices
 from replicators.order_processing_replicator import OrderProcessingReplicator
 from services.products.product_service import ProductService
 from services.refunds.refund_service import RefundService
+from abstract_classes.payments.abstract_payment_service import AbstractPaymentService
 
 
 def get_order_processing_coordinator(order_service: Optional[OrderService] = None,
-                                     payment_service: Optional[PaymentService] = None,
+                                     payment_service: Optional[AbstractPaymentService] = None,
                                      address_service: Optional[AddressService] = None,
                                      cart_service: Optional[CartService] = None,
                                      product_service: Optional[ProductService] = None,

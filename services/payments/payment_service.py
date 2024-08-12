@@ -3,6 +3,7 @@ from typing import Optional
 from django.conf import settings
 from django.db.models import QuerySet
 
+from abstract_classes.payments.abstract_payment_service import AbstractPaymentService
 from apps.payments.models import Payment
 from apps.payments.serializers.api_serializers import PaymentSerializer
 from param_classes.payments.build_purchase_unit_params import BuildPurchaseUnitParams
@@ -22,7 +23,8 @@ from .payment_responses.paypal.create_payment_response import CreatePaypalPaymen
 from .payment_responses.paypal.refund_payment_response import RefundPayPalPaymentResponse
 
 
-class PaymentService:
+# TODO: in the future, when there will be more than one payment method, payment method resolver need to be written
+class PaymentService(AbstractPaymentService):
     def __init__(self, payment_queryset: QuerySet[Payment]):
         self.paypal_client = PayPalClient(
             settings.PAYPAL_CLIENT_ID,
@@ -51,9 +53,9 @@ class PaymentService:
         payment: Payment = self.payment_queryset.create(**serializer.validated_data)
         return payment
 
-    def initialize_paypal_payment(self, params: InitializePaymentParams) -> CreatePaypalPaymentResponse:
+    def initialize_payment(self, params: InitializePaymentParams) -> CreatePaypalPaymentResponse:
         """
-        Initialize (Create in PayPal, but don't create in ours db) a PayPal payment
+        Initialize a payment (Create in the payment gateway, but don't create in ours db)
         """
         build_purchase_unit_params = BuildPurchaseUnitParams(
             reference_id=str(params.created_order.order.order_uuid),
@@ -97,9 +99,9 @@ class PaymentService:
 
         return create_order_response
 
-    def perform_paypal_payment_capture(self, data: CapturePaymentParams) -> CapturePayPalPaymentResponse:
+    def perform_payment_capture(self, data: CapturePaymentParams) -> CapturePayPalPaymentResponse:
         """
-        Captures PayPal Payment
+        Captures the Payment
         """
         capture_data = self.paypal_client.capture_payment(data.payment_id)
         capture_response_parser = PayPalCaptureResponseParser(capture_data)
@@ -129,7 +131,7 @@ class PaymentService:
         payment: Payment = self.payment_queryset.create(**serializer.validated_data)
         return payment
 
-    def perform_paypal_payment_refund(self, payment: Payment, refund_reason: str) -> RefundPayPalPaymentResponse:
+    def perform_payment_refund(self, payment: Payment, refund_reason: str) -> RefundPayPalPaymentResponse:
         """
         Performs full payment refund
         """
