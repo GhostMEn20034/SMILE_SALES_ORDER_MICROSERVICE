@@ -23,7 +23,7 @@ path_to_order_processing_replicator = 'replicators.order_processing_replicator.O
 Account = get_user_model()
 
 
-class TestOrderCreation(APITestCase):
+class TestOrderCreating(APITestCase):
     test_user: Account
     addresses: List[Address]
     products: List[Product]
