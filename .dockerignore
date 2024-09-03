@@ -4,6 +4,9 @@
 
 # Env files
 .env
+.env.k8s
+
+/k8s/
 
 /filetest/
 
