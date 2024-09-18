@@ -16,6 +16,7 @@ services:
       STATIC_ROOT: "/data/static"
     env_file:
       - .env.prod
+    restart: 'always'
 
   # Listens all product-related data from message broker
   product_queue_listener_orders:
@@ -24,6 +25,7 @@ services:
     command: python manage.py launch_product_queue_listener
     env_file:
       - .env.prod
+    restart: 'always'
 
   # Listens all user-related data from message broker
   user_data_queue_listener_orders:
@@ -32,6 +34,7 @@ services:
     command: python manage.py launch_user_queue_listener
     env_file:
       - .env.prod
+    restart: 'always'
 
   # Executes background tasks
   dramatiq_worker_orders:
@@ -40,6 +43,7 @@ services:
     command: python manage.py rundramatiq --processes 1 --threads 2
     env_file:
       - .env.prod
+    restart: 'always'
 
   # Executes periodic tasks
   dramatiq_crontab_worker_orders:
@@ -48,6 +52,7 @@ services:
     command: python manage.py crontab
     env_file:
       - .env.prod
+    restart: 'always'
 
   # Nginx reverse proxy
   nginx:
