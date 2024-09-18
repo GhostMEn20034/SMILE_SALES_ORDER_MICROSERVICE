@@ -5,6 +5,7 @@
 # Env files
 .env
 .env.k8s
+.env.prod
 
 /k8s/
 
