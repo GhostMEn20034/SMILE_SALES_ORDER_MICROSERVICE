@@ -1,0 +1,61 @@
+name: 'Deliver the code to the EC2 Server'
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  # First Job: Run Django Tests with Docker Compose
+  test:
+    name: 'Run Django Tests with Docker Compose'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+
+      - name: 'Create .env file with test environment variables'
+        run: |
+          echo "${{ secrets.ENV_VARS_TEST }}" > .env
+
+      - name: 'Set up Docker Compose'
+        run: |
+          docker compose -f docker-compose-test-env.yml up -d
+
+      - name: 'Check the list of services'
+        run: |
+          docker compose ps
+
+      - name: 'Run Django tests in the "web" service'
+        run: |
+          docker compose exec web python manage.py test -v 2
+
+      - name: 'Shut down Docker Compose services'
+        run: |
+          docker compose -f docker-compose-test-env.yml down
+
+  # Second Job: Deploy to EC2
+  build-publish-deploy:
+    name: 'Deploy to EC2'
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/master'  # Only deploy from the master branch
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+      
+      - name: "Connect to EC2 instance and restart the docker compose services"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }} # ec2-1-23-45-678.eu-central-1.compute.amazonaws.com
+          username: ${{ secrets.USERNAME }} # Name of the OS's user
+          key: ${{ secrets.KEY }} # RSA Key
+          script: |
+            cd ${{ secrets.PROJECT_DIRECTORY }}
+            git pull
+            docker compose -f docker-compose-prod.yml down
+            docker compose -f docker-compose-prod.yml pull
+            echo "${{ secrets.ENV_VARS_PROD }}" > .env.prod
+            docker compose -f docker-compose-prod.yml --env-file=.env.prod  up -d
+            
