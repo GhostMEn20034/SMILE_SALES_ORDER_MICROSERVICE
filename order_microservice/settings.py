@@ -169,11 +169,11 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "original_id",
 }
 
+# Base URL of the main website
+# This config variable is used to redirect the user after a payment or other operation to required endpoint on the main website
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL")
 
-CORS_ALLOWED_ORIGINS = [
-    FRONTEND_BASE_URL,
-]
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS").split(",")
 
 if os.getenv("CSRF_TRUSTED_ORIGINS", ""):
     CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
