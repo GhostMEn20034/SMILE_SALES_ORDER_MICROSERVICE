@@ -62,6 +62,7 @@ JWT_SIGNING_KEY=some_key # Signing key for JWT Tokens (Use the same value as in 
 DEBUG=0_or_1 # Determines whether the debug mode turned on (1 - on, 0 - off)
 ALLOWED_HOSTS=localhost,127.0.0.1,[::1] # Your allowed hosts
 FRONTEND_BASE_URL=http://localhost:3000 # Base URL of the main frontend webserver
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001 # CORS allowed origins (Main frontend's host must be included)
 SQL_ENGINE=django.db.backends.postgresql # DB Engine
 SQL_DATABASE=smile_sales_orders # Database Name
 SQL_USER=smile_sales_orders_usr # Database Owner
@@ -102,7 +103,7 @@ docker compose up -d --build
 #### 1.3 Go to localhost:8003 or 127.0.0.1:8003 and use the API.
 
 #### Running `docker-compose` in production
-If you want to do that, you need to use the file `docker-compose-prod.yml` and the of the file with env variables should be `.env.prod`.<br>
+If you want to do that, you need to use the file `docker-compose-prod.yml` and the file name with env variables should be `.env.prod`.<br>
 This option assumes that you have already run db in AWS or any other providers.<br>
 Also you need to use different command to run the app:
 ```bash
